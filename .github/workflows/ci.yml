@@ -58,7 +58,8 @@ jobs:
               -p 8080:8080 \
               -e NODE_ENV=production \
               -e PORT=8080 \
-              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
+              -e DOMAIN_URL="${{ secrets.DOMAIN_URL }}" \
               "${{ secrets.CI_DOCKER_USERNAME }}"/"${{ secrets.APP_NAME }}":"${{ github.sha }}";
             sudo docker system prune -a -f;
             sudo docker logout;
