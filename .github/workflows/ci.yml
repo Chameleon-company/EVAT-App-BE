@@ -60,6 +60,7 @@ jobs:
               -e PORT=8080 \
               -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
               -e DOMAIN_URL="${{ secrets.DOMAIN_URL }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               "${{ secrets.CI_DOCKER_USERNAME }}"/"${{ secrets.APP_NAME }}":"${{ github.sha }}";
             sudo docker system prune -a -f;
             sudo docker logout;
