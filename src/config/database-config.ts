@@ -3,7 +3,7 @@ import mongoose, { ConnectOptions } from "mongoose";
 const connectDB = async () => {
   try {
     // Define MongoDB URL with a fallback
-    const mongoUrl = process.env.MONGODB_URI || 'mongodb+srv://EVAT:EVAT123@cluster0.5axoq.mongodb.net/EVAT';
+    const mongoUrl = process.env.MONGODB_URI'
 
     // Add strict type checking for the URL
     if (!mongoUrl) {
