@@ -1,7 +1,14 @@
 import e, { Request, Response } from "express";
 import UserService from "../services/user-service";
 import { UserItemResponse } from "../dtos/user-item-response";
+import jwt from "jsonwebtoken";
 
+interface JwtPayload {
+    id: string;
+    email?: string;
+    role?: string;
+    admin?: boolean;
+}
 
 export default class UserController {
   constructor(private readonly userService: UserService) {}
@@ -26,6 +33,70 @@ export default class UserController {
     }
   }
 
+  
+   /**
+   * Function to be called to see if the users refresh token is still valid
+   * 
+   * @param req Request object containing the authorization header which contains the json webtoken
+   * @param res Response object used to send back the HTTP response 
+   * @returns Returns the status code which will be used to deny or allow the user to skip the login screen
+   */
+    async jwtLogin(req: Request, res: Response): Promise<Response> {
+        // Req needs to be the headers(?)
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+
+        if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET is not set in environment variables");
+        }
+
+        const token = authHeader.split(" ")[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+
+        // get the data from the decoded ID from the json webtoken
+        const data = await this.userService.getUserById(decoded.id);
+
+        if (data?.refreshTokenExpiresAt) {
+            // Convert refreshTokenExpiresAt to Unix (seconds)
+            var tokenExpiryUnix = Math.floor(new Date(data?.refreshTokenExpiresAt).getTime() / 1000);
+
+            // Get current time in Unix (seconds)
+            var nowUnix = Math.floor(Date.now() / 1000);
+        }
+        else { return res.status(404).json({ message: "No token exists" }) }
+
+        // if Token isn't expired
+        if (tokenExpiryUnix > nowUnix) {
+
+            //  Update lastLogin timestamp
+            const userToUpdate = await this.userService.getUserById(data._id);
+            if (userToUpdate) {
+                userToUpdate.lastLogin = new Date();
+                await userToUpdate.save();
+            }
+            
+
+            // Send success message along with the data 
+            return res.status(200).json({
+                message: "Automatic Login Successful",
+                // may not need the data
+                data: {
+                    user: data,
+                    refreshToken: data.refreshToken,
+                },
+            });
+        }
+        else {
+            return res.status(404).json({ message: "Token has expired" });
+        }
+    }
+
+
+
+
+  
   /**
    * Handles a login request
    * 
