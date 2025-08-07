@@ -133,6 +133,69 @@ router.post("/register", (req, res) => userController.register(req, res));
  */
 router.post("/login", (req, res) => userController.login(req, res));
 
+// Swagger for jwt login may have to be redone to properly allow the testing bit to work(?)
+/**
+ * @swagger
+ * /api/auth/jwt-login:
+ *   post:
+ *     summary: Auto login with JSON Web Token
+ *     description: >
+ *       Checks if the user's JWT and refresh token are still valid.  
+ *       If valid, the user is automatically logged in and their last login timestamp is updated.  
+ *       If invalid or expired, login is denied.
+ *     tags:
+ *       - Authentication
+ *     requestHeaders:
+ *       Authorization:
+ *         description: Bearer token in the format `Bearer {token}`
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: Automatic login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Automatic Login Successful"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       description: The user object (optional depending on what you send back)
+ *                     refreshToken:
+ *                       type: string
+ *                       example: "eyJhbGciOiJIUzI1NiIs..."
+ *       401:
+ *         description: Missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No token provided"
+ *       404:
+ *         description: Token has expired or user not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Token has expired"
+ */
+router.post("/jwt-login", (req, res) => userController.jwtLogin(req, res));
+
+
 /**
  * @swagger
  * /api/auth/refresh-token:
