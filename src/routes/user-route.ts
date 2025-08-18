@@ -138,23 +138,28 @@ router.post("/login", (req, res) => userController.login(req, res));
  * @swagger
  * /api/auth/jwt-login:
  *   post:
- *     summary: Auto login with JSON Web Token
+ *     summary: Automatic login with Access & Refresh Tokens
  *     description: >
- *       Checks if the user's JWT and refresh token are still valid.  
- *       If valid, the user is automatically logged in and their last login timestamp is updated.  
- *       If invalid or expired, login is denied.
+ *       This endpoint attempts to log the user in automatically using their tokens.  
+ * 
+ *       - If the access token is still valid, the user is logged in directly.  
+ *       - If the access token is expired but the refresh token is still valid, a new access token is issued and the user is logged in.  
+ *       - If both tokens are expired or invalid, the user must log in again.  
+ *       
+ *       In all successful cases, the user's `lastLogin` timestamp is updated.
  *     tags:
  *       - Authentication
- *     requestHeaders:
- *       Authorization:
- *         description: Bearer token in the format `Bearer {token}`
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         description: Bearer access token in the format `Bearer {token}`
  *         required: true
  *         schema:
  *           type: string
  *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *     responses:
  *       200:
- *         description: Automatic login successful
+ *         description: Automatic login successful (either access token still valid, or new one issued)
  *         content:
  *           application/json:
  *             schema:
@@ -168,12 +173,17 @@ router.post("/login", (req, res) => userController.login(req, res));
  *                   properties:
  *                     user:
  *                       type: object
- *                       description: The user object (optional depending on what you send back)
+ *                       description: User object
+ *                     accessToken:
+ *                       type: string
+ *                       description: New access token (if one was issued)
+ *                       example: "eyJhbGciOiJIUzI1NiIs..."
  *                     refreshToken:
  *                       type: string
+ *                       description: Refresh token, unchanged
  *                       example: "eyJhbGciOiJIUzI1NiIs..."
  *       401:
- *         description: Missing or invalid token
+ *         description: Missing, invalid, or expired refresh token (login required)
  *         content:
  *           application/json:
  *             schema:
@@ -181,9 +191,9 @@ router.post("/login", (req, res) => userController.login(req, res));
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "No token provided"
+ *                   example: "Refresh token expired, please log in again"
  *       404:
- *         description: Token has expired or user not found
+ *         description: User not found or refresh token missing
  *         content:
  *           application/json:
  *             schema:
@@ -191,10 +201,9 @@ router.post("/login", (req, res) => userController.login(req, res));
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Token has expired"
+ *                   example: "User not found"
  */
 router.post("/jwt-login", (req, res) => userController.jwtLogin(req, res));
-
 
 /**
  * @swagger
