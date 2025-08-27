@@ -225,6 +225,49 @@ router.get("/profile", authGuard(["user", "admin"]), (req, res) =>
 
 /**
  * @swagger
+ * /api/auth/payment:
+ *   put:
+ *     tags:
+ *       - User
+ *     summary: Add or update payment information
+ *     description: Allows the authenticated user to add or update their payment details
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cardNumber:
+ *                 type: string
+ *                 example: "4111111111111111"
+ *               expiryDate:
+ *                 type: string
+ *                 example: "12/26"
+ *               cvv:
+ *                 type: string
+ *                 example: "123"
+ *               billingAddress:
+ *                 type: string
+ *                 example: "123 Main St, Melbourne, VIC"
+ *     responses:
+ *       200:
+ *         description: Successfully updated payment information
+ *       400:
+ *         description: Missing or invalid fields
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.put("/payment", authGuard(["user", "admin"]), (req, res) =>
+  userController.updatePaymentInfo(req, res)
+);
+
+/**
+ * @swagger
  * /api/auth/user-list:
  *   get:
  *     tags:

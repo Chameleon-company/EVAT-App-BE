@@ -157,4 +157,25 @@ export default class UserService {
     const hashPassword = await bcrypt.hash(password, salt);
     return hashPassword;
   }
+
+  async addOrUpdatePaymentInfo(userId: string, paymentData: any) {
+  const user = await UserRepository.findById(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const updatedUser = await UserRepository.update(
+    { _id: userId },
+    {
+      paymentInfo: {
+        cardNumber: paymentData.cardNumber,
+        expiryDate: paymentData.expiryDate,
+        cvv: paymentData.cvv,
+        billingAddress: paymentData.billingAddress,
+      },
+    }
+  );
+
+  return updatedUser;
+}
 }
