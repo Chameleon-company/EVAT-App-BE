@@ -8,8 +8,13 @@ const gamificationController = new GamificationController();
 /**
  * @swagger
  * tags:
- *   - name: Gamification
- *     description: Endpoints for the EVAT gamification system
+ *   - name: Gamification - User Actions
+ *     description: Endpoints for user-facing gamification features like logging actions and purchasing items.
+ *   - name: Gamification - Item Management
+ *     description: Endpoints for creating, updating, and managing virtual items.
+ *   - name: Gamification - Badge Management
+ *     description: Endpoints for creating, updating, and managing achievement badges.
+ *
  * components:
  *   responses:
  *     UnauthorizedError:
@@ -32,12 +37,35 @@ const gamificationController = new GamificationController();
  *           type: string
  *         cost_points:
  *           type: number
+ *           nullable: true
  *         value_points:
  *           type: number
  *         rarity:
  *           type: string
  *         asset_url:
  *           type: string
+ *     GameBadge:
+ *       type: object
+ *       properties:
+ *         badge_id_string:
+ *           type: string
+ *         name:
+ *           type: string
+ *         description:
+ *           type: string
+ *         icon_url:
+ *           type: string
+ *         criteria:
+ *           type: object
+ *           properties:
+ *             source:
+ *               type: string
+ *             field:
+ *               type: string
+ *             operator:
+ *               type: string
+ *             value:
+ *               type: number
  */
 
 // --- User-Facing Routes ---
@@ -47,7 +75,7 @@ const gamificationController = new GamificationController();
  * /api/gamification/items:
  *   get:
  *     summary: Get all purchasable virtual items
- *     tags: [Gamification]
+ *     tags: [Gamification - User Actions]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -67,7 +95,7 @@ router.get("/items", authGuard(["user", "admin"]), (req, res) =>
  * /api/gamification/items/purchase:
  *   post:
  *     summary: Purchase a virtual item
- *     tags: [Gamification]
+ *     tags: [Gamification - User Actions]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -103,7 +131,7 @@ router.post("/items/purchase", authGuard(["user", "admin"]), (req, res) =>
  * /api/gamification/action:
  *   post:
  *     summary: Log a user action and receive rewards
- *     tags: [Gamification]
+ *     tags: [Gamification - User Actions]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -142,7 +170,7 @@ router.post("/action", authGuard(["user", "admin"]), (req, res) =>
  * /api/gamification/items/manage:
  *   post:
  *     summary: Create a new virtual item
- *     tags: [Gamification]
+ *     tags: [Gamification - Item Management]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -170,7 +198,7 @@ router.post("/items/manage", authGuard(["user", "admin"]), (req, res) =>
  * /api/gamification/items/manage/all:
  *   get:
  *     summary: Get all virtual items
- *     tags: [Gamification]
+ *     tags: [Gamification - Item Management]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -190,7 +218,7 @@ router.get("/items/manage/all", authGuard(["user", "admin"]), (req, res) =>
  * /api/gamification/items/manage/{itemId}:
  *   get:
  *     summary: Get a single virtual item by its MongoDB ID
- *     tags: [Gamification]
+ *     tags: [Gamification - Item Management]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -218,7 +246,7 @@ router.get("/items/manage/:itemId", authGuard(["user", "admin"]), (req, res) =>
  * /api/gamification/items/manage/{itemId}:
  *   patch:
  *     summary: Update a virtual item by its MongoDB ID
- *     tags: [Gamification]
+ *     tags: [Gamification - Item Management]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -252,7 +280,7 @@ router.patch("/items/manage/:itemId", authGuard(["user", "admin"]), (req, res) =
  * /api/gamification/items/manage/{itemId}:
  *   delete:
  *     summary: Delete a virtual item by its MongoDB ID
- *     tags: [Gamification]
+ *     tags: [Gamification - Item Management]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -273,6 +301,146 @@ router.patch("/items/manage/:itemId", authGuard(["user", "admin"]), (req, res) =
  */
 router.delete("/items/manage/:itemId", authGuard(["user", "admin"]), (req, res) =>
   gamificationController.deleteVirtualItem(req, res)
+);
+
+// --- Badge Management Routes ---
+
+/**
+ * @swagger
+ * /api/gamification/badges/manage:
+ *   post:
+ *     summary: Create a new badge
+ *     tags: [Gamification - Badge Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/GameBadge'
+ *     responses:
+ *       '201':
+ *         description: Badge created successfully.
+ *       '400':
+ *         description: Bad Request (e.g., missing required fields).
+ *       '401':
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       '500':
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post("/badges/manage", authGuard(["user", "admin"]), (req, res) =>
+  gamificationController.createBadge(req, res)
+);
+
+/**
+ * @swagger
+ * /api/gamification/badges/manage/all:
+ *   get:
+ *     summary: Get all badges
+ *     tags: [Gamification - Badge Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: List of all badges.
+ *       '401':
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       '500':
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get("/badges/manage/all", authGuard(["user", "admin"]), (req, res) =>
+  gamificationController.getAllBadges(req, res)
+);
+
+/**
+ * @swagger
+ * /api/gamification/badges/manage/{badgeId}:
+ *   get:
+ *     summary: Get a single badge by its MongoDB ID
+ *     tags: [Gamification - Badge Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: badgeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Single badge.
+ *       '401':
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       '404':
+ *         $ref: '#/components/responses/NotFoundError'
+ *       '500':
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get("/badges/manage/:badgeId", authGuard(["user", "admin"]), (req, res) =>
+  gamificationController.getBadgeById(req, res)
+);
+
+/**
+ * @swagger
+ * /api/gamification/badges/manage/{badgeId}:
+ *   patch:
+ *     summary: Update a badge by its MongoDB ID
+ *     tags: [Gamification - Badge Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: badgeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       '200':
+ *         description: Badge updated successfully.
+ *       '401':
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       '404':
+ *         $ref: '#/components/responses/NotFoundError'
+ *       '500':
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.patch("/badges/manage/:badgeId", authGuard(["user", "admin"]), (req, res) =>
+  gamificationController.updateBadge(req, res)
+);
+
+/**
+ * @swagger
+ * /api/gamification/badges/manage/{badgeId}:
+ *   delete:
+ *     summary: Delete a badge by its MongoDB ID
+ *     tags: [Gamification - Badge Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: badgeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Badge deleted successfully.
+ *       '401':
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       '404':
+ *         $ref: '#/components/responses/NotFoundError'
+ *       '500':
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.delete("/badges/manage/:badgeId", authGuard(["user", "admin"]), (req, res) =>
+  gamificationController.deleteBadge(req, res)
 );
 
 export default router;
