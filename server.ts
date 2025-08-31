@@ -17,7 +17,9 @@ import NavigationRoutes from "./src/routes/navigation-route";
 import FeedbackRoutes from "./src/routes/feedback-route";
 import ChargerReviewRoutes from "./src/routes/charger-review-route";
 import BookingRoutes from "./src/routes/booking-route";
+import GamificationRoutes from "./src/routes/gamification-route";
 import SupportRequestRoutes from "./src/routes/support-request-route";
+
 import path from "path";
 
 dotenv.config();
@@ -97,10 +99,15 @@ app.use('/api/admin-auth', adminAuthRoutes);
 app.use('/api/chargers', StationRoutes); // As laid out in teams https://teams.microsoft.com/l/message/19:7206bda1ca594fa2a18709af5d9fb718@thread.v2/1743116771178?context=%7B%22contextType%22%3A%22chat%22%7D
 app.use("/api/navigation", NavigationRoutes);
 app.use("/api/altChargers", chargerRoutes);
+<<<<<<< HEAD
 app.use("/api/feedback", FeedbackRoutes);
 app.use("/api/charger-reviews", ChargerReviewRoutes);
 app.use("/api/bookings", BookingRoutes);
 app.use("/api/support-requests", SupportRequestRoutes);
+=======
+app.use("/api/gamification", GamificationRoutes);
+
+>>>>>>> 752bde2 (backup before CRUD)
 
 // Serve React frontend
 const buildPath = path.join(__dirname, "/build");
