@@ -3,9 +3,10 @@ import mongoose, { Schema, Document } from "mongoose";
 //================================================
 // 1. Game Profile Schema and Model
 //================================================
+
 export interface IGameProfile extends Document {
   main_app_user_id: string;
-  created_at: Date;
+  created_at?: Date;
   gamification_profile: {
     persona: string;
     points_balance: number;
@@ -14,7 +15,7 @@ export interface IGameProfile extends Document {
   engagement_metrics: {
     current_app_login_streak: number;
     longest_app_login_streak: number;
-    last_login_date: Date | null;
+    last_login_date: Date;
   };
   contribution_summary: {
     total_check_ins: number;
@@ -45,7 +46,7 @@ const GameProfileSchema: Schema = new Schema<IGameProfile>({
   engagement_metrics: {
     current_app_login_streak: { type: Number, default: 0 },
     longest_app_login_streak: { type: Number, default: 0 },
-    last_login_date: { type: Date, default: null },
+    last_login_date: { type: Date },
   },
   contribution_summary: {
     total_check_ins: { type: Number, default: 0 },
@@ -63,45 +64,44 @@ const GameProfileSchema: Schema = new Schema<IGameProfile>({
     virtual_items: [{ type: Schema.Types.ObjectId, ref: 'GameVirtualItem' }],
   },
   active_quests: [{ type: Schema.Types.ObjectId, ref: 'GameQuest' }],
-}, { versionKey: false });
+}, { versionKey: false, timestamps: true });
 
 export const GameProfile = mongoose.model<IGameProfile>("GameProfile", GameProfileSchema, "game_profiles");
 
+//================================================
+// 2. Game Event Schema and Model
+//================================================
 
-//================================================
-// 2. Game Event (Log) Schema and Model
-//================================================
 export interface IGameEvent extends Document {
   user_id: mongoose.Types.ObjectId;
-  session_id?: string;
-  event_type: string;
+  session_id: string;
+  event_type: "ACTION_PERFORMED" | "QUEST_STATUS_CHANGED" | "POINTS_TRANSACTION";
   action_type?: string;
   timestamp: Date;
   details: object;
 }
 
 const GameEventSchema: Schema = new Schema<IGameEvent>({
-  user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  session_id: { type: String },
-  event_type: { type: String, required: true },
-  action_type: { type: String },
-  timestamp: { type: Date, default: Date.now },
-  details: { type: Object },
-}, { versionKey: false, timestamps: { createdAt: 'timestamp' } });
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    session_id: { type: String, required: true },
+    event_type: { type: String, required: true },
+    action_type: { type: String },
+    timestamp: { type: Date, default: Date.now },
+    details: { type: Object, required: true },
+}, { versionKey: false, timestamps: true });
 
 export const GameEvent = mongoose.model<IGameEvent>("GameEvent", GameEventSchema, "game_events");
-
 
 //================================================
 // 3. Game Badge Schema and Model
 //================================================
+
 export interface IGameBadge extends Document {
   badge_id_string: string;
   name: string;
   description: string;
   icon_url: string;
   criteria: object;
-  created_at: Date;
 }
 
 const GameBadgeSchema: Schema = new Schema<IGameBadge>({
@@ -110,33 +110,28 @@ const GameBadgeSchema: Schema = new Schema<IGameBadge>({
     description: { type: String, required: true },
     icon_url: { type: String, required: true },
     criteria: { type: Object, required: true },
-    created_at: { type: Date, default: Date.now },
-}, { versionKey: false });
+}, { versionKey: false, timestamps: true });
 
 export const GameBadge = mongoose.model<IGameBadge>("GameBadge", GameBadgeSchema, "game_badges");
-
 
 //================================================
 // 4. Game Quest Schema and Model
 //================================================
+
 export interface IGameQuest extends Document {
-    quest_id_string: string;
-    name: string;
-    description: string;
-    quest_category: string;
-    status: string;
-    target_personas: string[];
-    time_limit?: { 
-      start_date: Date; 
-      end_date: Date;
-    };
-    completion_criteria: object;
-    rewards: {
-        points?: number;
-        badge_id?: string;
-        virtual_item_id?: string;
-    };
-    created_at: Date;
+  quest_id_string: string;
+  name: string;
+  description: string;
+  quest_category: "TUTORIAL" | "DAILY" | "MILESTONE" | "EVENT";
+  status: "ACTIVE" | "INACTIVE";
+  target_personas: string[];
+  time_limit?: { start_date: Date; end_date: Date };
+  completion_criteria: object;
+  rewards: {
+    points?: number;
+    badge_id?: string;
+    virtual_item_id?: string;
+  };
 }
 
 const GameQuestSchema: Schema = new Schema<IGameQuest>({
@@ -144,50 +139,47 @@ const GameQuestSchema: Schema = new Schema<IGameQuest>({
     name: { type: String, required: true },
     description: { type: String, required: true },
     quest_category: { type: String, required: true },
-    status: { type: String, required: true, default: 'ACTIVE' },
+    status: { type: String, required: true, default: 'INACTIVE' },
     target_personas: [{ type: String }],
     time_limit: {
         start_date: { type: Date },
-        end_date: { type: Date }
+        end_date: { type: Date },
     },
     completion_criteria: { type: Object, required: true },
     rewards: {
         points: { type: Number },
         badge_id: { type: String },
-        virtual_item_id: { type: String }
+        virtual_item_id: { type: String },
     },
-    created_at: { type: Date, default: Date.now },
-}, { versionKey: false });
+}, { versionKey: false, timestamps: true });
 
 export const GameQuest = mongoose.model<IGameQuest>("GameQuest", GameQuestSchema, "game_quests");
-
 
 //================================================
 // 5. Game Virtual Item Schema and Model
 //================================================
+
 export interface IGameVirtualItem extends Document {
   item_id_string: string;
   name: string;
   description?: string;
-  item_type: string;
+  item_type: "AVATAR_CLOTHING" | "CAR_PAINT" | "CAR_ACCESSORY" | "CAR_STICKER" | "HOME_DECORATION";
   cost_points: number | null;
   value_points: number;
-  rarity: string;
+  rarity: "COMMON" | "RARE" | "EPIC" | "EVENT";
   asset_url: string;
-  created_at: Date;
 }
 
 const GameVirtualItemSchema: Schema = new Schema<IGameVirtualItem>({
-  item_id_string: { type: String, required: true, unique: true },
-  name: { type: String, required: true },
-  description: { type: String },
-  item_type: { type: String, required: true },
-  cost_points: { type: Number, default: null },
-  value_points: { type: Number, required: true },
-  rarity: { type: String, required: true },
-  asset_url: { type: String, required: true },
-  created_at: { type: Date, default: Date.now },
-}, { versionKey: false });
+    item_id_string: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    description: { type: String },
+    item_type: { type: String, required: true },
+    cost_points: { type: Number, default: null },
+    value_points: { type: Number, required: true },
+    rarity: { type: String, required: true },
+    asset_url: { type: String, required: true },
+}, { versionKey: false, timestamps: true });
 
 export const GameVirtualItem = mongoose.model<IGameVirtualItem>("GameVirtualItem", GameVirtualItemSchema, "game_virtual_items");
 
