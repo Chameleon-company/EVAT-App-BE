@@ -7,6 +7,9 @@ import ChargerSession, {
 } from '../models/charger-session-model';
 import { Types } from 'mongoose';
 
+// Import model layer to open change stream
+import { ChangeStream } from 'mongodb';
+
 export default class ChargerSessionRepository {
   // Create a new charging session
   async create(sessionData: Partial<IChargerSession>): Promise<IChargerSessionDocument> {
@@ -42,5 +45,18 @@ export default class ChargerSessionRepository {
   // Get all sessions for a specific station
   async findByStation(stationId: string): Promise<IChargerSessionDocument[]> {
     return await ChargerSession.find({ stationId: new Types.ObjectId(stationId) }).sort({ startTime: -1 });
+  }
+
+  // Expose MongoDB Change Stream (return what MongoDB give out)
+  watch(pipeline: any[] = []): ChangeStream {
+    return ChargerSession.watch(pipeline, { fullDocument: 'updateLockup' });
+  }
+
+  // Find the historical logs for DS pipelines and admin queries
+  async findLogs(filter: any = {}, limit = 100, skip = 0) {
+    return ChargerSession.find(filter)
+    .sort({createdAt: -1})
+    .skip(skip)
+    .limit(limit);
   }
 }
