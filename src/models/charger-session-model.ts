@@ -2,7 +2,7 @@
 
 import mongoose, { Schema, Document } from 'mongoose';
 // Define status for charging session
-export type SessionStatus = 'in_progress' | 'completed' | 'error';
+export type SessionStatus = 'in_progress' | 'completed' | 'error' | 'deleted';
 
 // Interface for the shape of charging session documents
 export interface IChargerSession {
@@ -63,3 +63,18 @@ export default mongoose.model<IChargerSessionDocument>(
   ChargerSessionSchema,
   'charger_sessions'
 );
+
+// Event schema for data streaming
+export type SessionOperationType = 'insert' | 'update' | 'delete';
+
+// Some will be optional for service
+export interface IChargerSessionEvent {
+  sessionId: string;
+  userId?: string;
+  stationId?: string;
+  status?: SessionStatus;
+  timestamp: Date                         // Timestamp of event emitted
+  operationType: SessionOperationType;    // Type of action
+  energyDelivered?: number;
+  cost?: number;
+}
