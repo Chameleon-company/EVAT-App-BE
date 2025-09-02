@@ -10,6 +10,7 @@ import ChargerSessionRepository from '../repositories/charger-session-repository
 // Middleware
 import { authGuard } from '../middlewares/auth-middleware';
 
+// Initialise router
 const router = express.Router();
 
 // Setup: controller -> service -> repository
@@ -331,5 +332,9 @@ router.post('/', authGuard(['user', 'admin']), (req: Request, res: Response) => 
  *         description: Session not found
  */
 router.patch('/end/:sessionId', authGuard(['user', 'admin']), (req: Request, res: Response) => chargerSessionController.endSession(req, res));
+
+// Newly added SSE and REST logs (need Swagger documentation)
+router.get('/sessions/stream', (req, res) => chargerSessionController.streamSessions(req, res));
+router.get('sessions/logs', (req, res) => chargerSessionController.getLogs(req, res));
 
 export default router;
