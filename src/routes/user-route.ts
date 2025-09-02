@@ -84,6 +84,79 @@ const userController = new UserController(userService);
  */
 router.post("/register", (req, res) => userController.register(req, res));
 
+// Swagger for jwt login may have to be redone to properly allow the testing bit to work(?)
+
+/**
+ * @swagger
+ * /api/auth/jwt-login:
+ *   post:
+ *     summary: Automatic login with Access & Refresh Tokens
+ *     description: >
+ *       This endpoint attempts to log the user in automatically using their tokens.  
+ * 
+ *       - If the access token is still valid, the user is logged in directly.  
+ *       - If the access token is expired but the refresh token is still valid, a new access token is issued and the user is logged in.  
+ *       - If both tokens are expired or invalid, the user must log in again.  
+ *       
+ *       In all successful cases, the user's `lastLogin` timestamp is updated.
+ *     tags:
+ *       - Authentication
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         description: Bearer access token in the format `Bearer {token}`
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: Automatic login successful (either access token still valid, or new one issued)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Automatic Login Successful"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       description: User object
+ *                     accessToken:
+ *                       type: string
+ *                       description: New access token (if one was issued)
+ *                       example: "eyJhbGciOiJIUzI1NiIs..."
+ *                     refreshToken:
+ *                       type: string
+ *                       description: Refresh token, unchanged
+ *                       example: "eyJhbGciOiJIUzI1NiIs..."
+ *       401:
+ *         description: Missing, invalid, or expired refresh token (login required)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Refresh token expired, please log in again"
+ *       404:
+ *         description: User not found or refresh token missing
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ */
+router.post("/jwt-login", (req, res) => userController.jwtLogin(req, res));
+
 /**
  * @swagger
  * /api/auth/login:
