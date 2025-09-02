@@ -154,4 +154,31 @@ export default class ChargerSessionController {
 
     return res.status(500).json({ message: msg });
   }
+
+  /**
+   * SSE Endpoint to live stream the session events
+   */
+  streamSessions = (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    this.sessionService.streamSessions((event) => {
+      res.write(`data: ${JSON.stringify(event)}\n\n`);
+    });
+  };
+
+  /**
+   * REST Endpoint for historical logs
+   */
+  getLogs = async (req: Request, res: Response) => {
+    try {
+      const { limit = 100, skip = 0 } = req.query;
+      const logs = await this.sessionService.getLogs({}, Number(limit), Number(skip));
+      res.json(logs);
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch logs' });
+    }
+  };
+
 }
