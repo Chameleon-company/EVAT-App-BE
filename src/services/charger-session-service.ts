@@ -1,7 +1,9 @@
 // Between controller and repository (bussiness layer to validate data before going to repository)
 import { Types } from 'mongoose';
 import ChargerSessionRepository from '../repositories/charger-session-repository';
-import { IChargerSession } from '../models/charger-session-model';
+import { IChargerSession, IChargerSessionEvent, SessionOperationType } from '../models/charger-session-model';
+//
+import { ChangeStreamDocument, ChangeStreamInsertDocument, ChangeStreamDeleteDocument } from 'mongodb';
 
 // Object
 type CreateSessionInput = {
@@ -11,8 +13,8 @@ type CreateSessionInput = {
   status?: 'in_progress' | 'completed' | 'error';
 }
 
-
 export default class ChargerSessionService {
+  // Constructor
   constructor(private readonly sessionRepo: ChargerSessionRepository) {}
 
   // Create a new session
@@ -74,5 +76,44 @@ export default class ChargerSessionService {
   // Get sessions for a station
   async getSessionsByStation(stationId: string) {
     return await this.sessionRepo.findByStation(stationId);
+  }
+
+  // Stream sessions using MongoDB Change Stream
+  streamSessions(callback: (event: IChargerSessionEvent) => void) {
+    const changeStream = this.sessionRepo.watch();
+
+    changeStream.on('change', (change: ChangeStreamDocument<IChargerSession>) => {
+      const operationType = change.operationType as SessionOperationType;
+
+      // Event object depending on the operations (insert/update vs delete)
+      if ('fullDocument' in change && change.fullDocument) {
+        const fullDoc = change.fullDocument!;
+        callback({
+          sessionId: change.documentKey._id.toString(),
+          userId: fullDoc.userId?.toString(),
+          stationId: fullDoc.stationId?.toString(),
+          status: fullDoc.status,
+          timestamp: new Date(),
+          operationType,
+          energyDelivered: fullDoc.energyDelivered,
+          cost: fullDoc.cost,
+        });
+      } else if (operationType === 'delete') {
+        const deleteChange = change as ChangeStreamDeleteDocument<IChargerSession>;
+        callback({
+          sessionId: deleteChange.documentKey._id.toString(),
+          userId: '',
+          stationId: '',
+          status: 'deleted',
+          timestamp: new Date(),
+          operationType,
+        });
+      }
+    });
+  }
+
+  // Grab the historical logs
+  async getLogs(filter: any = {}, limit = 100, skip = 0) {
+    return this.sessionRepo.findLogs(filter, limit, skip);
   }
 }
