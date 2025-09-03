@@ -9,9 +9,18 @@ export default class UserService {
   async register(
     email: string,
     password: string,
-    fullName: string
+    firstName: string,
+    lastName: string,
+    mobile?: string
   ): Promise<any> {
     try {
+      // Validate mobile if provided
+      if (mobile && !/^04\d{8}$/.test(mobile)) {
+        throw new Error(
+          "Mobile number must be in Australian format (04XXXXXXXX)"
+        );
+      }
+
       // Check if there is an existing user with the given email
       const existingUser = await UserRepository.findByEmail(email);
       if (existingUser) {
@@ -26,7 +35,9 @@ export default class UserService {
       const newUser = new User();
       newUser.email = email;
       newUser.password = hashPass;
-      newUser.fullName = fullName;
+      newUser.firstName = firstName;
+      newUser.lastName = lastName;
+      if (mobile) newUser.mobile = mobile;
 
       return await UserRepository.create(newUser);
     } catch (e: unknown) {

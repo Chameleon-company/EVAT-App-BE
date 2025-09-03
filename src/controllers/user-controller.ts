@@ -14,10 +14,10 @@ export default class UserController {
    * @returns Returns the status code, a relevant message, and the data object of the user if the request was successful
    */
   async register(req: Request, res: Response): Promise<Response> {
-    const { email, password, fullName } = req.body;
+    const { email, password, firstName, lastName, mobile} = req.body;
 
     try {
-      const user = await this.userService.register(email, password, fullName);
+      const user = await this.userService.register(email, password, firstName, lastName, mobile);
       return res
         .status(201)
         .json({ message: "User registered successfully", data: user });
@@ -54,7 +54,7 @@ export default class UserController {
       return res.status(200).json({
         message: "Login successful",
         data: {
-          user: data.data,
+          user: new UserItemResponse(data.data),
           accessToken: token,
         },
       });

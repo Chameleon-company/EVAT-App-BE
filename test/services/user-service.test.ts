@@ -14,7 +14,9 @@ jest.mock("../../src/models/user-model", () => {
     return jest.fn().mockImplementation(() => ({
         email: "",
         password: "",
-        fullName: "",
+        firstName: "",
+        lastName: "",
+        mobile: "",
         role: "user",
         refreshToken: null,
         refreshTokenExpiresAt: null
@@ -39,12 +41,16 @@ describe("user-service", () => {
             // Arrange
             const mockEmail = "test@example.com";
             const mockPassword = "password123";
-            const mockFullName = "Test User";
+            const mockFirstName = "Test";
+            const mockLastName = "User";
+            const mockMobile = "0412345678";
             const mockHashedPassword = "hashedPassword123";
             const mockNewUser = {
                 email: mockEmail,
                 password: mockHashedPassword,
-                fullName: mockFullName
+                firstName: mockFirstName,
+                lastName: mockLastName,
+                mobile: mockMobile
             };
             const mockCreatedUser = {
                 id: "user123",
@@ -58,14 +64,16 @@ describe("user-service", () => {
             const mockUserInstance = {
                 email: "",
                 password: "",
-                fullName: ""
+                firstName: "",
+                lastName: "",
+                mobile: ""
             };
             (User as unknown as jest.Mock).mockImplementation(() => mockUserInstance);
 
             (UserRepository.create as jest.Mock).mockResolvedValue(mockCreatedUser);
 
             // Act
-            const result = await userService.register(mockEmail, mockPassword, mockFullName);
+            const result = await userService.register(mockEmail, mockPassword, mockFirstName, mockLastName, mockMobile);
             
             // Assert
             expect(UserRepository.findByEmail).toHaveBeenCalledWith(mockEmail);
@@ -73,7 +81,9 @@ describe("user-service", () => {
             expect(User).toHaveBeenCalled();
             expect(mockUserInstance.email).toBe(mockEmail);
             expect(mockUserInstance.password).toBe(mockHashedPassword);
-            expect(mockUserInstance.fullName).toBe(mockFullName);
+            expect(mockUserInstance.firstName).toBe(mockFirstName);
+            expect(mockUserInstance.lastName).toBe(mockLastName);
+            expect(mockUserInstance.mobile).toBe(mockMobile);
             expect(UserRepository.create).toHaveBeenCalledWith(mockUserInstance);
             expect(result).toEqual(mockCreatedUser);
         });
@@ -82,7 +92,9 @@ describe("user-service", () => {
             // Arrange
             const mockEmail = "existing@example.com";
             const mockPassword = "password123";
-            const mockFullName = "Existing User";
+            const mockFirstName = "Existing";
+            const mockLastName = "User";
+            const mockMobile = "0412345678";
             const mockExistingUser = {
                 id: "user123",
                 email: mockEmail
@@ -91,7 +103,7 @@ describe("user-service", () => {
             (UserRepository.findByEmail as jest.Mock).mockResolvedValue(mockExistingUser);
 
             // Act & Assert
-            await expect(userService.register(mockEmail, mockPassword, mockFullName))
+            await expect(userService.register(mockEmail, mockPassword, mockFirstName, mockLastName, mockMobile))
                 .rejects
                 .toThrow(`Error during user registration: The auth account with email = [${mockEmail}] has already existed`);
             expect(UserRepository.findByEmail).toHaveBeenCalledWith(mockEmail);
@@ -101,14 +113,16 @@ describe("user-service", () => {
             // Arrange
             const mockEmail = "test@example.com";
             const mockPassword = "password123";
-            const mockFullName = "Test User";
+            const mockFirstName = "Test User FirstName";
+            const mockLastName = "Test User LastName";
+            const mockMobile = "Test User Mobile";
 
             (UserRepository.findByEmail as jest.Mock).mockImplementation(() => {
                 throw new Error("Database connection error");
             });
 
             // Act & Assert
-            await expect(userService.register(mockEmail, mockPassword, mockFullName))
+            await expect(userService.register(mockEmail, mockPassword, mockFirstName, mockLastName, mockMobile))
                 .rejects
                 .toThrow("Error during user registration: Database connection error");
         });
