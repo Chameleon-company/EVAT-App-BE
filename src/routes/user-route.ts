@@ -233,6 +233,9 @@ router.post("/refresh-token", (req, res) =>
 router.get("/profile", authGuard(["user", "admin"]), (req, res) =>
   userController.getUserById(req, res)
 );
+router.put("/profile", authGuard(["user","admin"]), (req, res) =>
+  userController.updateUserProfile(req, res)
+);
 
 /**
  * @swagger

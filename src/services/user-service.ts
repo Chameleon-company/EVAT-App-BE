@@ -168,4 +168,39 @@ export default class UserService {
     const hashPassword = await bcrypt.hash(password, salt);
     return hashPassword;
   }
+
+  /**
+   * Partially update the authenticated user's own profile.
+   */
+  async updateSelf(
+    userId: string,
+    updates: Partial<{
+      firstName: string;
+      lastName: string;
+      mobile: string;
+      email: string;
+    }>
+  ) {
+    const allowed: Record<string, unknown> = {};
+
+    if (typeof updates.firstName === "string") allowed.firstName = updates.firstName.trim();
+    if (typeof updates.lastName === "string") allowed.lastName = updates.lastName.trim();
+    if (typeof updates.mobile === "string") allowed.mobile = updates.mobile.trim();
+
+    if (typeof updates.email === "string") {
+      const email = updates.email.trim().toLowerCase();
+      const existing = await UserRepository.findOne({ email });
+      if (existing && String(existing._id) !== String(userId)) {
+        throw new Error("Email is already in use");
+      }
+      allowed.email = email;
+    }
+
+    if (Object.keys(allowed).length === 0) {
+      throw new Error("No valid fields to update");
+    }
+
+    const updated = await UserRepository.update({ _id: userId }, { $set: allowed });
+    return updated;
+  }
 }
