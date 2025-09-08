@@ -276,9 +276,10 @@ router.put("/profile", authGuard(["user","admin"]), (req, res) =>
  *       500:
  *         description: Server error
  */
-router.put("/payment", authGuard(["user", "admin"]), (req, res) =>
-  userController.updatePaymentInfo(req, res)
-);
+
+// router.put("/payment", authGuard(["user", "admin"]), (req, res) =>
+//   userController.updatePaymentInfo(req, res)
+// );
 
 /**
  * @swagger
