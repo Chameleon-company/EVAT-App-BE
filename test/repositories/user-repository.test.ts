@@ -15,7 +15,7 @@ describe("user-repository", () => {
         test("Case: Should find a user by ID successfully", async () => {
             // Arrange
             const mockUserId = "fa3c18";
-            const mockUser = { _id: mockUserId, fullName: "Test User", email: "test@example.com" };
+            const mockUser = { _id: mockUserId, firstName: "Test User FirstName", lastName: "Test User LastName", email: "test@example.com", mobile: "0412345678" };
             const execMock = jest.fn().mockResolvedValue(mockUser);
             const findOneMock = jest.fn().mockReturnValue({ exec: execMock });
             (User.findOne as jest.Mock).mockReturnValue({ exec: execMock });
@@ -49,7 +49,7 @@ describe("user-repository", () => {
         test("Case: Should find a user by email successfully", async () => {
             // Arrange
             const mockEmail = "test@example.com";
-            const mockUser = { _id: "dc1499", fullName: "Test User", email: mockEmail };
+            const mockUser = { _id: "dc1499", firstName: "Test User FirstName", lastName: "Test User LastName", email: mockEmail, mobile: "0412345678" };
             const execMock = jest.fn().mockResolvedValue(mockUser);
             (User.findOne as jest.Mock).mockReturnValue({ exec: execMock });
 
@@ -82,7 +82,7 @@ describe("user-repository", () => {
         test("Case: Should find a user with custom filter", async () => {
             // Arrange
             const mockFilter = { name: "Test User" };
-            const mockUser = { _id: "e0a71a", fullName: "Test User", email: "test@example.com" };
+            const mockUser = { _id: "e0a71a", firstName: "Test User FirstName", lastName: "Test User LastName", email: "test@example.com", mobile: "0412345678" };
             const execMock = jest.fn().mockResolvedValue(mockUser);
             (User.findOne as jest.Mock).mockReturnValue({ exec: execMock });
 
@@ -97,7 +97,7 @@ describe("user-repository", () => {
 
         test("Case: Should return null if filter doesn't match any user", async () => {
             // Arrange
-            const mockFilter = { fullName: "Nonexistent User" };
+            const mockFilter = { firstName: "Nonexistent", lastName: "User", mobile: "0412345678" };            
             const execMock = jest.fn().mockResolvedValue(null);
             (User.findOne as jest.Mock).mockReturnValue({ exec: execMock });
 
@@ -115,8 +115,8 @@ describe("user-repository", () => {
         test("Case: Should find all users with default empty filter", async () => {
             // Arrange
             const mockUsers = [
-                { _id: "0a6e91", fullName: "Test User 1", email: "test1@example.com" },
-                { _id: "ee0f65", fullName: "Test User 2", email: "test2@example.com" }
+                { _id: "0a6e91", firstName: "Test", lastName: "User 1", email: "test1@example.com", mobile: "0412345678" },
+                { _id: "ee0f65", firstName: "Test", lastName: "User 2", email: "test2@example.com", mobile: "0412345678" }
             ];
             const execMock = jest.fn().mockResolvedValue(mockUsers);
             const selectMock = jest.fn().mockReturnValue({ exec: execMock });
@@ -136,7 +136,7 @@ describe("user-repository", () => {
             // Arrange
             const mockFilter = { role: "admin" };
             const mockUsers = [
-                { _id: "84a0af", fullName: "Admin User", email: "admin@example.com", role: "admin" }
+                { _id: "84a0af", firstName: "Admin", lastName: "User", email: "admin@example.com", mobile: "0412345678", role: "admin" }
             ];
             const execMock = jest.fn().mockResolvedValue(mockUsers);
             const selectMock = jest.fn().mockReturnValue({ exec: execMock });
@@ -156,7 +156,13 @@ describe("user-repository", () => {
     describe("create", () => {
         test("Case: Should create a new user", async () => {
             // Arrange
-            const mockUserData = { fullName: "New User", email: "new@example.com", password: "password123" };
+            const mockUserData = {
+                firstName: "New",
+                lastName: "User",
+                email: "new@example.com",
+                mobile: "0412345678",
+                password: "password123"
+            };            
             const mockSavedUser = { _id: "8a8541", ...mockUserData };
             const saveMock = jest.fn().mockResolvedValue(mockSavedUser);
             (User as unknown as jest.Mock).mockImplementation(() => ({
@@ -177,10 +183,12 @@ describe("user-repository", () => {
         test("Case: Should update a user successfully", async () => {
             // Arrange
             const mockFilter = { _id: "8382ff" };
-            const mockUpdate = { fullName: "Updated Name" };
+            const mockUpdate = { firstName: "Updated", lastName: "Name" };
             const mockUpdatedUser = {
                 _id: "8382ff",
-                fullName: "Updated Name",
+                firstName: "Updated",
+                lastName: "Name",
+                mobile: "0412345678",
                 email: "test@example.com"
             };
             const execMock = jest.fn().mockResolvedValue(mockUpdatedUser);
@@ -198,7 +206,7 @@ describe("user-repository", () => {
         test("Case: Should return null if no user matches the filter", async () => {
             // Arrange
             const mockFilter = { _id: "nonexistentid" };
-            const mockUpdate = { fullName: "Updated Name" };
+            const mockUpdate = { firstName: "Updated", lastName: "Name" };
             const execMock = jest.fn().mockResolvedValue(null);
             (User.findOneAndUpdate as jest.Mock).mockReturnValue({ exec: execMock });
 
@@ -218,7 +226,9 @@ describe("user-repository", () => {
             const mockFilter = { _id: "80507f" };
             const mockDeletedUser = {
                 _id: "80507f",
-                fullName: "Test User",
+                firstName: "Test User FirstName",
+                lastName: "Test User LastName",
+                mobile: "0412345678",
                 email: "test@example.com"
             };
             const execMock = jest.fn().mockResolvedValue(mockDeletedUser);
@@ -257,8 +267,10 @@ describe("user-repository", () => {
             const mockExpiresAt = new Date();
             const mockUpdatedUser = {
                 _id: mockUserId,
-                fullName: "Test User",
+                firstName: "Test User FirstName",
+                lastName: "Test User LastName",
                 email: "test@example.com",
+                mobile: "0412345678",
                 refreshToken: mockRefreshToken,
                 refreshTokenExpiresAt: mockExpiresAt
             };
@@ -290,8 +302,10 @@ describe("user-repository", () => {
             const mockExpiresAt = null;
             const mockUpdatedUser = {
                 _id: mockUserId,
-                fullName: "Test User",
+                firstName: "Test User FirstName",
+                lastName: "Test User LastName",
                 email: "test@example.com",
+                mobile: "0412345678",
                 refreshToken: null,
                 refreshTokenExpiresAt: null
             };

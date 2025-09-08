@@ -26,7 +26,8 @@ export default class ProfileService {
         return await ProfileRepository.create(newProfile);
       } else {
         return await ProfileRepository.updateByUserId(userId, {
-          userCarModel: vehicleId,
+          // userCarModel: vehicleId, :removed as this calls the repo with an unknown key userCarModel wehn it should be user_car_model
+          user_car_model: vehicleId,
         });
       }
     } catch (e) {

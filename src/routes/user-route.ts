@@ -23,7 +23,11 @@ const userController = new UserController(userService);
  *           type: string
  *         email:
  *           type: string
- *         fullName:
+ *         firstName:
+ *           type: string
+ *         lastName:
+ *           type: string
+ *         mobile:
  *           type: string
  *         role:
  *           type: string
@@ -50,15 +54,22 @@ const userController = new UserController(userService);
  *           schema:
  *             type: object
  *             properties:
- *               fullName:
+ *               firstName:
  *                 type: string
  *                 example: "Milly"
+ *               lastName:
+ *                 type: string
+ *                 example: "Brown"
  *               email:
  *                 type: string
  *                 example: "example@deakin.edu.au"
  *               password:
  *                 type: string
  *                 example: "password123"
+ *               mobile:
+ *                 type: string
+ *                 example: "0412345678"
+ *                 description: "Australian mobile number starting with 04"           
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -187,7 +198,7 @@ router.post("/refresh-token", (req, res) =>
  *   get:
  *     tags:
  *       - User
- *     summary: Get user profile including id, fullName, email, role
+ *     summary: Get user profile including id, firstName, lastName, email, mobile, role
  *     description: Get the profile of the currently authenticated user
  *     security:
  *       - bearerAuth: []
@@ -221,6 +232,9 @@ router.post("/refresh-token", (req, res) =>
  */
 router.get("/profile", authGuard(["user", "admin"]), (req, res) =>
   userController.getUserById(req, res)
+);
+router.put("/profile", authGuard(["user","admin"]), (req, res) =>
+  userController.updateUserProfile(req, res)
 );
 
 /**
