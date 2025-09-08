@@ -7,6 +7,12 @@ export interface IUser extends Document {
   lastName: string;
   mobile?: string;
   role: "user" | "admin";
+  paymentInfo?: {
+    cardNumber: string;
+    expiryDate: string;
+    cvv: { type: String },
+    billingAddress: string;
+  };
   refreshToken: string | null;
   refreshTokenExpiresAt: Date | null;
   lastLogin?: Date;
@@ -43,6 +49,13 @@ const UserSchema: Schema = new Schema<IUser>(
       type: String,
       enum: ["user", "admin"],
       default: "user",
+    },
+    // ⚠️ Not safe for real apps
+    paymentInfo: {
+      cardNumber: { type: String },
+      expiryDate: { type: String },
+      cvv: { type: String },
+      billingAddress: { type: String }
     },
     refreshToken: {
       type: String,
