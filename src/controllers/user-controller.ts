@@ -121,34 +121,35 @@ export default class UserController {
    * @param res Response object used to send back the HTTP response
    * @returns Returns the status code, a relevant message, and the data if the request was successful   
    */
-  async updatePaymentInfo(req: Request, res: Response): Promise<Response> {
-    const { user } = req;
-    const { cardNumber, expiryDate, cvv, billingAddress } = req.body;
+  
+  // async updatePaymentInfo(req: Request, res: Response): Promise<Response> {
+  //   const { user } = req;
+  //   const { cardNumber, expiryDate, cvv, billingAddress } = req.body;
 
-    try {
-      if (!cardNumber || !expiryDate || !cvv) {
-        return res.status(400).json({ message: "Missing payment fields" });
-      }
+  //   try {
+  //     if (!cardNumber || !expiryDate || !cvv) {
+  //       return res.status(400).json({ message: "Missing payment fields" });
+  //     }
 
-      const updatedUser = await this.userService.addOrUpdatePaymentInfo(user.id, {
-        cardNumber,
-        expiryDate,
-        cvv,
-        billingAddress,
-      });
+  //     const updatedUser = await this.userService.addOrUpdatePaymentInfo(user.id, {
+  //       cardNumber,
+  //       expiryDate,
+  //       cvv,
+  //       billingAddress,
+  //     });
 
-      if (!updatedUser) {
-      return res.status(404).json({ message: "Updated user not found" }); //handles warning for if theres no updated user
-      }
+  //     if (!updatedUser) {
+  //     return res.status(404).json({ message: "Updated user not found" }); //handles warning for if theres no updated user
+  //     }
 
-      return res.status(200).json({
-        message: "Payment information updated successfully",
-        data: updatedUser.paymentInfo, // don’t send sensitive fields back
-      });
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
-  }
+  //     return res.status(200).json({
+  //       message: "Payment information updated successfully",
+  //       data: updatedUser.paymentInfo, // don’t send sensitive fields back
+  //     });
+  //   } catch (error: any) {
+  //     return res.status(500).json({ message: error.message });
+  //   }
+  // }
 
   /**
    * Handles a request to get a user by an input email
