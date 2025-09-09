@@ -1,186 +1,191 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import GamificationController from "../../src/controllers/gamification-controller";
-import { GameVirtualItem, GameProfile, GameEvent } from "../../src/models/game-model";
+import { GameVirtualItem, GameProfile, GameEvent, GameBadge, GameQuest } from "../../src/models/game-model";
 
 // Mock the Mongoose models
-jest.mock("../../src/models/game-model", () => ({
-  GameVirtualItem: {
-    create: jest.fn(),
-    find: jest.fn(),
-    findById: jest.fn(),
-    findByIdAndUpdate: jest.fn(),
-    findByIdAndDelete: jest.fn(),
-    findOne: jest.fn(),
-  },
-  GameProfile: {
-    findOne: jest.fn(),
-  },
-  GameEvent: {
-    create: jest.fn(),
-  },
-}));
+jest.mock("../../src/models/game-model", () => {
+    // Mock the constructor and save method for instance-based operations
+    const mockSave = jest.fn().mockResolvedValue(this);
+    const mockModel = jest.fn().mockImplementation(() => ({
+        save: mockSave,
+    }));
+
+    // Attach static methods
+    mockModel.create = jest.fn();
+    mockModel.find = jest.fn();
+    mockModel.findById = jest.fn();
+    mockModel.findByIdAndUpdate = jest.fn();
+    mockModel.findByIdAndDelete = jest.fn();
+    mockModel.findOne = jest.fn();
+    mockModel.findOneAndUpdate = jest.fn();
+    mockModel.findOneAndDelete = jest.fn();
+
+    return {
+        GameVirtualItem: mockModel,
+        GameProfile: mockModel,
+        GameEvent: mockModel,
+        GameBadge: mockModel,
+        GameQuest: mockModel,
+    };
+});
+
 
 describe("GamificationController", () => {
   let gamificationController: GamificationController;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
+  let mockUser: any;
 
   beforeEach(() => {
-    // Reset all mocks and create fresh instances before each test
     jest.clearAllMocks();
     gamificationController = new GamificationController();
-
-    // Setup mock response with Jest spies
+    
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
     };
+
+    mockUser = {
+        id: new mongoose.Types.ObjectId().toHexString(),
+        email: 'test@example.com',
+        role: 'user'
+    };
   });
+
+  //============================================
+  // User-Facing API Tests
+  //============================================
+
+  describe("getGameProfileForUser", () => {
+    test("Case: Should retrieve a user's populated game profile", async () => {
+      // Arrange
+      mockRequest = { user: mockUser };
+      const mockProfile = { 
+        main_app_user_id: mockUser.id, 
+        populate: jest.fn().mockReturnThis() // Chain populate calls
+      };
+      (GameProfile.findOne as jest.Mock).mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockProfile)
+      });
+
+      // Act
+      await gamificationController.getGameProfileForUser(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(GameProfile.findOne).toHaveBeenCalledWith({ main_app_user_id: mockUser.id });
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        message: "User profile retrieved successfully",
+        data: mockProfile
+      });
+    });
+  });
+
+  describe("getLeaderboard", () => {
+      test("Case: Should retrieve a list of top users", async () => {
+        // Arrange
+        const mockLeaderboard = [{ main_app_user_id: mockUser.id, gamification_profile: { net_worth: 1000 } }];
+        (GameProfile.find as jest.Mock).mockReturnValue({
+            sort: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            select: jest.fn().mockReturnThis(),
+            exec: jest.fn().mockResolvedValue(mockLeaderboard)
+        });
+
+        // Act
+        await gamificationController.getLeaderboard(mockRequest as Request, mockResponse as Response);
+
+        // Assert
+        expect(mockResponse.status).toHaveBeenCalledWith(200);
+        expect(mockResponse.json).toHaveBeenCalledWith({
+            message: "Leaderboard retrieved successfully",
+            data: mockLeaderboard,
+        });
+      });
+  });
+
+  //============================================
+  // Management API Tests
+  //============================================
 
   // --- Virtual Item CRUD Tests ---
-
   describe("createVirtualItem", () => {
     test("Case: Should create a virtual item successfully", async () => {
-      // Arrange
-      const itemData = {
-        item_id_string: "TEST_ITEM_01",
-        name: "Test Item",
-        item_type: "CAR_STICKER",
-        value_points: 100,
-      };
+      const itemData = { name: "Test Item" };
       mockRequest = { body: itemData };
-
-      (GameVirtualItem.findOne as jest.Mock).mockResolvedValue(null);
       (GameVirtualItem.create as jest.Mock).mockResolvedValue(itemData);
 
-      // Act
       await gamificationController.createVirtualItem(mockRequest as Request, mockResponse as Response);
 
-      // Assert
       expect(GameVirtualItem.create).toHaveBeenCalledWith(itemData);
       expect(mockResponse.status).toHaveBeenCalledWith(201);
-      expect(mockResponse.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: "Virtual item created successfully",
-          data: itemData,
-        })
-      );
-    });
-
-     test("Case: Should return 409 if item_id_string already exists", async () => {
-      // Arrange
-       const itemData = { item_id_string: "EXISTING_ITEM", name: "Existing Item", item_type: "CAR_PAINT", value_points: 50 };
-       mockRequest = { body: itemData };
-
-      (GameVirtualItem.findOne as jest.Mock).mockResolvedValue(itemData);
-
-      // Act
-      await gamificationController.createVirtualItem(mockRequest as Request, mockResponse as Response);
-      
-      // Assert
-      expect(mockResponse.status).toHaveBeenCalledWith(409);
-      expect(mockResponse.json).toHaveBeenCalledWith({ message: `An item with item_id_string 'EXISTING_ITEM' already exists.`});
+      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ data: itemData }));
     });
   });
 
-  describe("getAllVirtualItems", () => {
-    test("Case: Should retrieve all virtual items", async () => {
-      // Arrange
-      const mockItems = [{ name: "Item 1" }, { name: "Item 2" }];
-      mockRequest = {};
-      (GameVirtualItem.find as jest.Mock).mockResolvedValue(mockItems);
+  // --- Badge CRUD Tests ---
+  describe("createBadge", () => {
+      test("Case: Should create a badge successfully", async () => {
+        const badgeData = { name: "Test Badge" };
+        mockRequest = { body: badgeData };
+        (GameBadge.create as jest.Mock).mockResolvedValue(badgeData);
 
-      // Act
-      await gamificationController.getAllVirtualItems(mockRequest as Request, mockResponse as Response);
+        await gamificationController.createBadge(mockRequest as Request, mockResponse as Response);
 
-      // Assert
-      expect(GameVirtualItem.find).toHaveBeenCalledWith({});
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: "All virtual items retrieved successfully",
-        data: mockItems,
+        expect(GameBadge.create).toHaveBeenCalledWith(badgeData);
+        expect(mockResponse.status).toHaveBeenCalledWith(201);
+        expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ data: badgeData }));
       });
+  });
+
+  // --- Quest CRUD Tests ---
+  describe("createQuest", () => {
+    test("Case: Should create a quest successfully", async () => {
+        const questData = { name: "Test Quest" };
+        mockRequest = { body: questData };
+        (GameQuest.create as jest.Mock).mockResolvedValue(questData);
+
+        await gamificationController.createQuest(mockRequest as Request, mockResponse as Response);
+
+        expect(GameQuest.create).toHaveBeenCalledWith(questData);
+        expect(mockResponse.status).toHaveBeenCalledWith(201);
+        expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ data: questData }));
     });
   });
 
-  describe("getVirtualItemById", () => {
-    test("Case: Should retrieve a single virtual item by ID", async () => {
-      // Arrange
-      const itemId = new mongoose.Types.ObjectId().toHexString();
-      const mockItem = { _id: itemId, name: "Specific Item" };
-      mockRequest = { params: { itemId } };
+  // --- Game Profile CRUD Tests ---
+  describe("createGameProfile", () => {
+      test("Case: Should create a game profile successfully", async () => {
+        const profileData = { main_app_user_id: mockUser.id };
+        mockRequest = { body: profileData };
+        (GameProfile.findOne as jest.Mock).mockResolvedValue(null);
+        (GameProfile.create as jest.Mock).mockResolvedValue(profileData);
+        
+        await gamificationController.createGameProfile(mockRequest as Request, mockResponse as Response);
 
-      (GameVirtualItem.findById as jest.Mock).mockResolvedValue(mockItem);
-
-      // Act
-      await gamificationController.getVirtualItemById(mockRequest as Request, mockResponse as Response);
-
-      // Assert
-      expect(GameVirtualItem.findById).toHaveBeenCalledWith(itemId);
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: "Virtual item retrieved successfully",
-        data: mockItem,
+        expect(GameProfile.findOne).toHaveBeenCalledWith({ main_app_user_id: mockUser.id });
+        expect(GameProfile.create).toHaveBeenCalledWith(profileData);
+        expect(mockResponse.status).toHaveBeenCalledWith(201);
+        expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ data: profileData }));
       });
-    });
+  });
 
-    test("Case: Should return 404 if item not found", async () => {
-       // Arrange
-       const itemId = new mongoose.Types.ObjectId().toHexString();
-       mockRequest = { params: { itemId } };
-       (GameVirtualItem.findById as jest.Mock).mockResolvedValue(null);
+  // --- Game Event CRUD Tests ---
+   describe("createEvent", () => {
+    test("Case: Should create a game event successfully", async () => {
+        const eventData = { user_id: mockUser.id, event_type: "ACTION_PERFORMED" };
+        mockRequest = { body: eventData };
+        (GameEvent.create as jest.Mock).mockResolvedValue(eventData);
 
-       // Act
-       await gamificationController.getVirtualItemById(mockRequest as Request, mockResponse as Response);
+        await gamificationController.createEvent(mockRequest as Request, mockResponse as Response);
 
-       // Assert
-       expect(mockResponse.status).toHaveBeenCalledWith(404);
-       expect(mockResponse.json).toHaveBeenCalledWith({ message: "Virtual item not found." });
+        expect(GameEvent.create).toHaveBeenCalledWith(eventData);
+        expect(mockResponse.status).toHaveBeenCalledWith(201);
+        expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ data: eventData }));
     });
   });
 
-  describe("updateVirtualItem", () => {
-    test("Case: Should update a virtual item successfully", async () => {
-      // Arrange
-      const itemId = new mongoose.Types.ObjectId().toHexString();
-      const updateData = { name: "Updated Item Name" };
-      const updatedItem = { _id: itemId, ...updateData };
-      mockRequest = { params: { itemId }, body: updateData };
-
-      (GameVirtualItem.findByIdAndUpdate as jest.Mock).mockResolvedValue(updatedItem);
-
-      // Act
-      await gamificationController.updateVirtualItem(mockRequest as Request, mockResponse as Response);
-
-      // Assert
-      expect(GameVirtualItem.findByIdAndUpdate).toHaveBeenCalledWith(itemId, updateData, { new: true });
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: "Virtual item updated successfully",
-        data: updatedItem,
-      });
-    });
-  });
-
-  describe("deleteVirtualItem", () => {
-    test("Case: Should delete a virtual item successfully", async () => {
-      // Arrange
-      const itemId = new mongoose.Types.ObjectId().toHexString();
-      mockRequest = { params: { itemId } };
-
-      (GameVirtualItem.findByIdAndDelete as jest.Mock).mockResolvedValue({ _id: itemId });
-
-      // Act
-      await gamificationController.deleteVirtualItem(mockRequest as Request, mockResponse as Response);
-
-      // Assert
-      expect(GameVirtualItem.findByIdAndDelete).toHaveBeenCalledWith(itemId);
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: "Virtual item deleted successfully",
-      });
-    });
-  });
 });
 

@@ -1,33 +1,87 @@
 import { Request, Response } from "express";
-import {
-    GameVirtualItem,
-    GameProfile,
-    GameEvent,
-    GameBadge,
-    GameQuest
-} from "../models/game-model";
+import { GameProfile, GameVirtualItem, GameEvent, GameBadge, GameQuest } from "../models/game-model";
 import mongoose from "mongoose";
 
-// A map to define points for each action type
+// A map to define points for each action type, used by the logAction function
 const actionPoints: { [key: string]: number } = {
+    app_login: 10,
     check_in: 10,
+    upload_photo: 15,
+    fun_quiz_correct: 20,
+    ask_chatbot_question: 20,
+    use_route_planner: 25,
     report_fault: 50,
     validate_ai_prediction: 75,
+    redeem_easter_egg: 100,
+    complete_long_trip_with_planner: 150,
+    charge_at_green_station: 250,
     discover_new_station_in_black_spot: 1000,
-    use_route_planner: 25, // Assuming this completes DAILY_ROUTE_PLAN
-    complete_long_trip_with_planner: 150, // Assuming this completes TUTORIAL_FIRST_ROUTE_PLAN
-    ask_chatbot_question: 20, // Assuming this completes DAILY_CHATBOT_QUERY
-    fun_quiz_correct: 20, // Assuming this completes DAILY_QUIZ
-    redeem_easter_egg: 100, // Assuming this completes DAILY_EGG_HUNT
-    charge_at_green_station: 250, // Assuming this is for EVENT_EARTH_DAY_2025
-    app_login: 0, // No direct points, handled by streak logic
 };
 
 export default class GamificationController {
-    constructor() { }
 
-    // --- User-Facing Routes ---
+    //================================================
+    // User Profile & Leaderboard
+    //================================================
 
+    /**
+     * Retrieves the complete gamification profile for the authenticated user.
+     */
+    async getGameProfileForUser(req: Request, res: Response): Promise<Response> {
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ message: "User not authenticated." });
+        }
+
+        try {
+            const userProfile = await GameProfile.findOne({ main_app_user_id: userId })
+                .populate('inventory.badges_earned')
+                .populate('inventory.virtual_items')
+                .exec();
+
+            if (!userProfile) {
+                const defaultProfile = {
+                    main_app_user_id: userId,
+                    gamification_profile: { persona: "ANXIOUS_NEWCOMER", points_balance: 0, net_worth: 0 },
+                    engagement_metrics: { current_app_login_streak: 0, longest_app_login_streak: 0, last_login_date: null },
+                    contribution_summary: { total_check_ins: 0, total_fault_reports: 0, total_ai_validations: 0, total_black_spot_discoveries: 0, total_route_plans: 0, total_chatbot_questions: 0, total_quizzes_correct: 0, total_easter_eggs_redeemed: 0, total_virtual_items_purchased: 0, },
+                    inventory: { badges_earned: [], virtual_items: [] },
+                    active_quests: []
+                };
+                 return res.status(200).json({ message: "User profile retrieved successfully", data: defaultProfile });
+            }
+
+            return res.status(200).json({ message: "User profile retrieved successfully", data: userProfile });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Server error fetching user profile", error: error.message });
+        }
+    }
+
+    /**
+     * Retrieves the public leaderboard, sorted by net worth.
+     */
+    async getLeaderboard(req: Request, res: Response): Promise<Response> {
+        try {
+            const topUsers = await GameProfile.find()
+                .sort({ 'gamification_profile.net_worth': -1 })
+                .limit(100)
+                .select('main_app_user_id gamification_profile.persona gamification_profile.net_worth')
+                .exec();
+
+            return res.status(200).json({ message: "Leaderboard retrieved successfully", data: topUsers });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Server error fetching leaderboard", error: error.message });
+        }
+    }
+
+
+    //================================================
+    // Core Gamification Logic
+    //================================================
+
+    /**
+     * Retrieves all purchasable virtual items for the shop.
+     */
     async getVirtualItems(req: Request, res: Response): Promise<Response> {
         try {
             const items = await GameVirtualItem.find({ cost_points: { $ne: null } }).exec();
@@ -40,6 +94,9 @@ export default class GamificationController {
         }
     }
 
+    /**
+     * Handles a user's request to purchase a virtual item with points.
+     */
     async purchaseVirtualItem(req: Request, res: Response): Promise<Response> {
         const { itemId, session_id } = req.body;
         const userId = req.user?.id;
@@ -52,112 +109,79 @@ export default class GamificationController {
             let userProfile = await GameProfile.findOne({ main_app_user_id: userId }).exec();
 
             if (!item) return res.status(404).json({ message: `Item with ID '${itemId}' not found.` });
-            if (!userProfile) return res.status(404).json({ message: `Game profile for user '${userId}' not found.` });
+            if (!userProfile) userProfile = new GameProfile({ main_app_user_id: userId });
             if (item.cost_points === null) return res.status(400).json({ message: "This item cannot be purchased." });
             if (userProfile.inventory.virtual_items.includes(item._id)) return res.status(400).json({ message: "You already own this item." });
             if (userProfile.gamification_profile.points_balance < item.cost_points) return res.status(400).json({ message: "Insufficient points." });
 
-            const pointsChange = -item.cost_points;
-            const netWorthChange = item.value_points + pointsChange;
-
-            userProfile.gamification_profile.points_balance += pointsChange;
-            userProfile.gamification_profile.net_worth += netWorthChange;
+            userProfile.gamification_profile.points_balance -= item.cost_points;
+            userProfile.gamification_profile.net_worth += (item.value_points - item.cost_points);
             userProfile.inventory.virtual_items.push(item._id);
-            userProfile.contribution_summary.total_virtual_items_purchased += 1;
+            userProfile.contribution_summary.total_virtual_items_purchased = (userProfile.contribution_summary.total_virtual_items_purchased || 0) + 1;
 
-            const purchaseEvent = new GameEvent({
+            const eventLog = new GameEvent({
                 user_id: new mongoose.Types.ObjectId(userId),
-                session_id,
-                event_type: 'ACTION_PERFORMED',
-                action_type: 'purchase_virtual_item',
-                timestamp: new Date(),
-                details: { itemId: item.item_id_string, cost: item.cost_points }
-            });
-
-            const transactionEvent = new GameEvent({
-                user_id: new mongoose.Types.ObjectId(userId),
-                session_id,
+                session_id: session_id,
                 event_type: 'POINTS_TRANSACTION',
-                action_type: 'ITEM_PURCHASE',
-                timestamp: new Date(),
-                details: { points_change: pointsChange, reason: 'ITEM_PURCHASE', item_id_string: item.item_id_string }
+                action_type: 'purchase_virtual_item',
+                details: {
+                    points_change: -item.cost_points,
+                    reason: "ITEM_PURCHASE",
+                    item_id_string: item.item_id_string,
+                }
             });
 
             await userProfile.save();
-            await purchaseEvent.save();
-            await transactionEvent.save();
+            await eventLog.save();
 
             return res.status(200).json({
                 message: `Successfully purchased '${item.name}'!`,
-                data: userProfile
+                data: {
+                    new_balance: userProfile.gamification_profile.points_balance,
+                    updated_profile: userProfile
+                }
             });
         } catch (error: any) {
             return res.status(500).json({ message: "Server error during item purchase.", error: error.message });
         }
     }
 
+    /**
+     * Logs a user action, updates profile stats, grants points, and checks for quest/badge completion.
+     */
     async logAction(req: Request, res: Response): Promise<Response> {
-        const { action_type, session_id, details } = req.body;
+        const { action_type, details, session_id } = req.body;
         const userId = req.user?.id;
 
-        if (!action_type) return res.status(400).json({ message: "action_type is required." });
+        if (!action_type) return res.status(400).json({ message: "Action type is required." });
         if (!userId) return res.status(401).json({ message: "User not authenticated." });
 
         try {
             let userProfile = await GameProfile.findOne({ main_app_user_id: userId }).exec();
             if (!userProfile) {
-                 userProfile = await new GameProfile({ main_app_user_id: userId }).save();
+                userProfile = new GameProfile({ main_app_user_id: userId });
             }
 
-            const actionEvent = new GameEvent({
-                user_id: new mongoose.Types.ObjectId(userId),
-                session_id,
-                event_type: 'ACTION_PERFORMED',
-                action_type,
-                timestamp: new Date(),
-                details
-            });
-            await actionEvent.save();
-
-            // --- Handle Points and Contribution Counters ---
-            const pointsToAdd = actionPoints[action_type] ?? 0;
+            const pointsToAdd = actionPoints[action_type] || 0;
             if (pointsToAdd > 0) {
                 userProfile.gamification_profile.points_balance += pointsToAdd;
                 userProfile.gamification_profile.net_worth += pointsToAdd;
-
-                 const transactionEvent = new GameEvent({
-                    user_id: new mongoose.Types.ObjectId(userId),
-                    session_id,
-                    event_type: 'POINTS_TRANSACTION',
-                    action_type: 'BASE_REWARD',
-                    timestamp: new Date(),
-                    details: { points_change: pointsToAdd, reason: 'ACTION_REWARD', source_action: action_type }
-                });
-                await transactionEvent.save();
             }
 
-            // --- Update Contribution Summary Counters ---
-            const summary = userProfile.contribution_summary;
             const summaryKey = `total_${action_type}s`;
-            if (summaryKey in summary) {
-                 (summary as any)[summaryKey] += 1;
-            } else if (action_type === 'discover_new_station_in_black_spot') {
-                summary.total_black_spot_discoveries += 1;
-            } else if (action_type === 'fun_quiz_correct') {
-                summary.total_quizzes_correct += 1;
+            if (summaryKey in userProfile.contribution_summary) {
+                (userProfile.contribution_summary as any)[summaryKey]++;
             }
 
-            // --- Handle Login Streak Logic ---
             if (action_type === 'app_login') {
                 const today = new Date();
-                today.setHours(0, 0, 0, 0);
                 const lastLogin = userProfile.engagement_metrics.last_login_date;
                 if (lastLogin) {
-                    const yesterday = new Date(today);
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    if (lastLogin.getTime() === yesterday.getTime()) {
-                        userProfile.engagement_metrics.current_app_login_streak += 1;
-                    } else if (lastLogin.getTime() < yesterday.getTime()) {
+                    const yesterday = new Date();
+                    yesterday.setDate(today.getDate() - 1);
+                    if (lastLogin.toDateString() === yesterday.toDateString()) {
+                        userProfile.engagement_metrics.current_app_login_streak++;
+                    } else if (lastLogin.toDateString() !== today.toDateString()) {
                         userProfile.engagement_metrics.current_app_login_streak = 1;
                     }
                 } else {
@@ -166,17 +190,138 @@ export default class GamificationController {
                 if (userProfile.engagement_metrics.current_app_login_streak > userProfile.engagement_metrics.longest_app_login_streak) {
                     userProfile.engagement_metrics.longest_app_login_streak = userProfile.engagement_metrics.current_app_login_streak;
                 }
-                userProfile.engagement_metrics.last_login_date = new Date();
+                userProfile.engagement_metrics.last_login_date = today;
             }
 
+            const eventLog = new GameEvent({
+                user_id: new mongoose.Types.ObjectId(userId),
+                session_id: session_id,
+                event_type: 'ACTION_PERFORMED',
+                action_type,
+                details: details
+            });
+            
             await userProfile.save();
-            
-            // Note: Quest and Badge checking logic would go here in a real implementation
-            
-            return res.status(200).json({ message: "Action logged successfully", data: userProfile });
+            await eventLog.save();
 
+            // TODO: Add logic to check and award quests/badges after profile update
+
+            return res.status(200).json({ message: "Action logged successfully", data: { new_balance: userProfile.gamification_profile.points_balance } });
         } catch (error: any) {
             return res.status(500).json({ message: "Server error logging action.", error: error.message });
+        }
+    }
+
+
+    //================================================
+    // Management Functions
+    //================================================
+
+    // --- Game Event Management (for testing) ---
+    async createEvent(req: Request, res: Response): Promise<Response> {
+        try {
+            const newEvent = new GameEvent(req.body);
+            await newEvent.save();
+            return res.status(201).json({ message: "Event created successfully (for testing)", data: newEvent });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Server error creating event", error: error.message });
+        }
+    }
+
+    async getAllEvents(req: Request, res: Response): Promise<Response> {
+        try {
+            const events = await GameEvent.find().sort({ timestamp: -1 }).limit(200).exec();
+            return res.status(200).json({ message: "All events retrieved", data: events });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Server error retrieving events", error: error.message });
+        }
+    }
+
+    async getEventsByUserId(req: Request, res: Response): Promise<Response> {
+        try {
+            const events = await GameEvent.find({ user_id: req.params.userId }).sort({ timestamp: -1 }).exec();
+            if (!events || events.length === 0) {
+                return res.status(404).json({ message: "No events found for this user ID" });
+            }
+            return res.status(200).json({ message: "User events retrieved", data: events });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Server error retrieving user events", error: error.message });
+        }
+    }
+    
+    async deleteEvent(req: Request, res: Response): Promise<Response> {
+        try {
+            const deletedEvent = await GameEvent.findByIdAndDelete(req.params.eventId).exec();
+            if (!deletedEvent) {
+                return res.status(404).json({ message: "Event not found" });
+            }
+            return res.status(200).json({ message: "Event deleted successfully (for testing)" });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Server error deleting event", error: error.message });
+        }
+    }
+
+    // --- Game Profile Management ---
+    async createGameProfile(req: Request, res: Response): Promise<Response> {
+        try {
+            const { main_app_user_id } = req.body;
+            if (!main_app_user_id) {
+                return res.status(400).json({ message: "main_app_user_id is required." });
+            }
+            const existingProfile = await GameProfile.findOne({ main_app_user_id }).exec();
+            if (existingProfile) {
+                return res.status(400).json({ message: "A game profile for this user already exists." });
+            }
+            const newProfile = new GameProfile(req.body);
+            await newProfile.save();
+            return res.status(201).json({ message: "Game profile created successfully", data: newProfile });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Server error creating game profile", error: error.message });
+        }
+    }
+
+    async getAllGameProfiles(req: Request, res: Response): Promise<Response> {
+        try {
+            const profiles = await GameProfile.find().exec();
+            return res.status(200).json({ message: "All game profiles retrieved", data: profiles });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Server error retrieving game profiles", error: error.message });
+        }
+    }
+
+    async getGameProfileByUserId(req: Request, res: Response): Promise<Response> {
+        try {
+            const profile = await GameProfile.findOne({ main_app_user_id: req.params.userId }).exec();
+            if (!profile) {
+                return res.status(404).json({ message: "Game profile not found for this user ID" });
+            }
+            return res.status(200).json({ message: "Game profile retrieved", data: profile });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Server error retrieving game profile", error: error.message });
+        }
+    }
+
+    async updateGameProfile(req: Request, res: Response): Promise<Response> {
+        try {
+            const updatedProfile = await GameProfile.findOneAndUpdate({ main_app_user_id: req.params.userId }, req.body, { new: true }).exec();
+            if (!updatedProfile) {
+                return res.status(404).json({ message: "Game profile not found for this user ID" });
+            }
+            return res.status(200).json({ message: "Game profile updated successfully", data: updatedProfile });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Server error updating game profile", error: error.message });
+        }
+    }
+
+    async deleteGameProfile(req: Request, res: Response): Promise<Response> {
+        try {
+            const deletedProfile = await GameProfile.findOneAndDelete({ main_app_user_id: req.params.userId }).exec();
+            if (!deletedProfile) {
+                return res.status(404).json({ message: "Game profile not found for this user ID" });
+            }
+            return res.status(200).json({ message: "Game profile deleted successfully" });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Server error deleting game profile", error: error.message });
         }
     }
 
@@ -298,6 +443,66 @@ export default class GamificationController {
             return res.status(200).json({ message: "Badge deleted successfully" });
         } catch (error: any) {
             return res.status(500).json({ message: "Error deleting badge", error: error.message });
+        }
+    }
+
+    // --- Quest Management ---
+
+    async createQuest(req: Request, res: Response): Promise<Response> {
+        try {
+            const newQuest = new GameQuest(req.body);
+            await newQuest.save();
+            return res.status(201).json({ message: "Quest created successfully", data: newQuest });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Error creating quest", error: error.message });
+        }
+    }
+
+    async getAllQuests(req: Request, res: Response): Promise<Response> {
+        try {
+            const quests = await GameQuest.find().exec();
+            return res.status(200).json({ message: "All quests retrieved", data: quests });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Error retrieving quests", error: error.message });
+        }
+    }
+
+    async getQuestById(req: Request, res: Response): Promise<Response> {
+        try {
+            const { questId } = req.params;
+            const quest = await GameQuest.findById(questId).exec();
+            if (!quest) {
+                return res.status(404).json({ message: "Quest not found" });
+            }
+            return res.status(200).json({ message: "Quest retrieved", data: quest });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Error retrieving quest", error: error.message });
+        }
+    }
+
+    async updateQuest(req: Request, res: Response): Promise<Response> {
+        try {
+            const { questId } = req.params;
+            const updatedQuest = await GameQuest.findByIdAndUpdate(questId, req.body, { new: true }).exec();
+            if (!updatedQuest) {
+                return res.status(404).json({ message: "Quest not found" });
+            }
+            return res.status(200).json({ message: "Quest updated successfully", data: updatedQuest });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Error updating quest", error: error.message });
+        }
+    }
+
+    async deleteQuest(req: Request, res: Response): Promise<Response> {
+        try {
+            const { questId } = req.params;
+            const deletedQuest = await GameQuest.findByIdAndDelete(questId).exec();
+            if (!deletedQuest) {
+                return res.status(404).json({ message: "Quest not found" });
+            }
+            return res.status(200).json({ message: "Quest deleted successfully" });
+        } catch (error: any) {
+            return res.status(500).json({ message: "Error deleting quest", error: error.message });
         }
     }
 }
