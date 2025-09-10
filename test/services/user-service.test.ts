@@ -144,7 +144,7 @@ describe("user-service", () => {
             (UserRepository.findByEmail as jest.Mock).mockResolvedValue(mockUser);
             (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
             (generateToken as jest.Mock).mockImplementation((user, expiry) => {
-                if (expiry === "1h") return mockAccessToken;
+                if (expiry === "1d") return mockAccessToken;
                 if (expiry === "1d") return mockRefreshToken;
                 return "";
             });
@@ -156,7 +156,7 @@ describe("user-service", () => {
             // Assert
             expect(UserRepository.findByEmail).toHaveBeenCalledWith(mockEmail);
             expect(bcrypt.compareSync).toHaveBeenCalledWith(mockPassword, mockUser.password);
-            expect(generateToken).toHaveBeenCalledWith(mockUser, "1h");
+            expect(generateToken).toHaveBeenCalledWith(mockUser, "1d");
             expect(generateToken).toHaveBeenCalledWith(mockUser, "1d");
             expect(UserRepository.updateRefreshToken).toHaveBeenCalledWith(
                 mockUser.id,
@@ -225,7 +225,7 @@ describe("user-service", () => {
             (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
             (UserRepository.findById as jest.Mock).mockResolvedValue(mockUser);
             (generateToken as jest.Mock).mockImplementation((user, expiry) => {
-                if (expiry === "1h") return mockNewAccessToken;
+                if (expiry === "1d") return mockNewAccessToken;
                 if (expiry === "1d") return mockNewRefreshToken;
                 return "";
             });
@@ -237,7 +237,7 @@ describe("user-service", () => {
             // Assert
             expect(jwt.verify).toHaveBeenCalledWith(mockRefreshToken, "test-secret");
             expect(UserRepository.findById).toHaveBeenCalledWith(mockDecodedToken.id);
-            expect(generateToken).toHaveBeenCalledWith(mockUser, "1h");
+            expect(generateToken).toHaveBeenCalledWith(mockUser, "1d");
             expect(generateToken).toHaveBeenCalledWith(mockUser, "1d");
             expect(UserRepository.updateRefreshToken).toHaveBeenCalledWith(
                 mockUser.id,
