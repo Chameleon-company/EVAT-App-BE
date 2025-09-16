@@ -157,6 +157,8 @@ export default class ChargerSessionController {
 
   /**
    * SSE Endpoint to live stream the session events
+   * @param req Request object (can carry authentication info like admin)
+   * @param res Response object kept open for continuous stream
    */
   streamSessions = (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'text/event-stream');
@@ -170,6 +172,8 @@ export default class ChargerSessionController {
 
   /**
    * REST Endpoint for historical logs
+   * @param req Request object containing optional query params like limit and skip
+   * @param res Response object that sends back JSON list of logs
    */
   getLogs = async (req: Request, res: Response) => {
     try {
