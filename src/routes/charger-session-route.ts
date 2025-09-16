@@ -37,7 +37,7 @@ const chargerSessionController = new ChargerSessionController(chargerSessionServ
  *         schema:
  *           type: string
  *         description: The ID of the charging session
- *         example: ""
+ *         example: "123"
  *     responses:
  *       200:
  *         description: Charging session retrieved successfully
@@ -48,23 +48,23 @@ const chargerSessionController = new ChargerSessionController(chargerSessionServ
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Success! Session ID ... found."
+ *                   example: "Success! Session ID 123 found."
  *                 data:
  *                   type: object
  *                   properties:
  *                     _id:
  *                       type: string
- *                       example: ""
+ *                       example: "123"
  *                     userId:
  *                       type: string
- *                       example: ""
+ *                       example: "456"
  *                     stationId:
  *                       type: string
- *                       example: ""
+ *                       example: "789"
  *                     startTime:
  *                       type: string
  *                       format: date-time
- *                       example: ""
+ *                       example: "2025-09-07T04:00:00Z"
  *                     status:
  *                       type: string
  *                       example: "in_progress"
@@ -77,7 +77,7 @@ const chargerSessionController = new ChargerSessionController(chargerSessionServ
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Session with ID ... not found."
+ *                   example: "Session with ID 123 not found."
  */
 router.get('/:sessionId', authGuard(['user', 'admin']), (req: Request, res: Response) => chargerSessionController.getSessionById(req, res));
 
@@ -98,7 +98,7 @@ router.get('/:sessionId', authGuard(['user', 'admin']), (req: Request, res: Resp
  *         schema:
  *           type: string
  *         description: The ID of the user
- *         example: ""
+ *         example: "456"
  *     responses:
  *       200:
  *         description: Charging sessions for the user retrieved successfully
@@ -109,7 +109,7 @@ router.get('/:sessionId', authGuard(['user', 'admin']), (req: Request, res: Resp
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "User ID ... sessions found."
+ *                   example: "User ID 456 sessions found."
  *                 data:
  *                   type: array
  *                   items:
@@ -117,17 +117,17 @@ router.get('/:sessionId', authGuard(['user', 'admin']), (req: Request, res: Resp
  *                     properties:
  *                       _id:
  *                         type: string
- *                         example: ""
+ *                         example: "123"
  *                       userId:
  *                         type: string
- *                         example: ""
+ *                         example: "456"
  *                       stationId:
  *                         type: string
- *                         example: ""
+ *                         example: "789"
  *                       startTime:
  *                         type: string
  *                         format: date-time
- *                         example: ""
+ *                         example: "2025-09-07T04:00:00Z"
  *                       status:
  *                         type: string
  *                         example: "in_progress"
@@ -140,7 +140,7 @@ router.get('/:sessionId', authGuard(['user', 'admin']), (req: Request, res: Resp
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "User ID ... not found."
+ *                   example: "User ID 123 not found."
  *       500:
  *         description: Server error
  */
@@ -163,7 +163,7 @@ router.get('/user/:userId', authGuard(['user', 'admin']), (req: Request, res: Re
  *         schema:
  *           type: string
  *         description: The ID of the charging station
- *         example: ""
+ *         example: "789"
  *     responses:
  *       200:
  *         description: Charging sessions for the station retrieved successfully
@@ -174,7 +174,7 @@ router.get('/user/:userId', authGuard(['user', 'admin']), (req: Request, res: Re
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Station sessions ID ... found."
+ *                   example: "Station sessions ID 789 found."
  *                 data:
  *                   type: array
  *                   items:
@@ -182,17 +182,17 @@ router.get('/user/:userId', authGuard(['user', 'admin']), (req: Request, res: Re
  *                     properties:
  *                       _id:
  *                         type: string
- *                         example: ""
+ *                         example: "123"
  *                       userId:
  *                         type: string
- *                         example: ""
+ *                         example: "456"
  *                       stationId:
  *                         type: string
- *                         example: ""
+ *                         example: "789"
  *                       startTime:
  *                         type: string
  *                         format: date-time
- *                         example: ""
+ *                         example: "2025-09-07T04:00:00Z"
  *                       status:
  *                         type: string
  *                         example: "in_progress"
@@ -205,7 +205,7 @@ router.get('/user/:userId', authGuard(['user', 'admin']), (req: Request, res: Re
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Station ID ... not found."
+ *                   example: "Station ID 789 not found."
  *       500:
  *         description: Server error
  */
@@ -233,14 +233,14 @@ router.get('/station/:stationId', authGuard(['user', 'admin']), (req: Request, r
  *             properties:
  *               userId:
  *                 type: string
- *                 example: ""
+ *                 example: "456"
  *               stationId:
  *                 type: string
- *                example: ""
+ *                example: "789"
  *               startTime:
  *                 type: string
  *                 format: date-time
- *                 example: ""
+ *                 example: "2025-09-07T04:00:00Z"
  *     responses:
  *       201:
  *         description: Charging session started successfully
@@ -251,23 +251,23 @@ router.get('/station/:stationId', authGuard(['user', 'admin']), (req: Request, r
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Charging session ID ... started."
+ *                   example: "Charging session ID 123 started."
  *                 data:
  *                   type: object
  *                   properties:
  *                     _id:
  *                       type: string
- *                       example: ""
+ *                       example: "123"
  *                     userId:
  *                       type: string
- *                       example: ""
+ *                       example: "456"
  *                     stationId:
  *                       type: string
- *                       example: ""
+ *                       example: "789"
  *                     startTime:
  *                       type: string
  *                       format: date-time
- *                       example: ""
+ *                       example: "2025-09-07T04:00:00Z"
  *                     status:
  *                       type: string
  *                       example: "in_progress"
@@ -293,7 +293,7 @@ router.post('/', authGuard(['user', 'admin']), (req: Request, res: Response) => 
  *         schema:
  *           type: string
  *         description: The ID of the charging session to end
- *         example: ""
+ *         example: "789"
  *     responses:
  *       200:
  *         description: Charging session ended successfully
@@ -304,20 +304,20 @@ router.post('/', authGuard(['user', 'admin']), (req: Request, res: Response) => 
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Charging session ID ... ended."
+ *                   example: "Charging session ID 789 ended."
  *                 data:
  *                   type: object
  *                   properties:
  *                     _id:
  *                       type: string
- *                       example: ""
+ *                       example: "123"
  *                     status:
  *                       type: string
  *                       example: "completed"
  *                     endTime:
  *                       type: string
  *                       format: date-time
- *                       example: ""
+ *                       example: "2025-09-07T04:00:00Z"
  *       404:
  *         description: Charging session with the provided ID not found
  *         content:
@@ -327,14 +327,98 @@ router.post('/', authGuard(['user', 'admin']), (req: Request, res: Response) => 
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Session with ID ... not found."
+ *                   example: "Session with ID 789 not found."
  *       404:
  *         description: Session not found
  */
 router.patch('/end/:sessionId', authGuard(['user', 'admin']), (req: Request, res: Response) => chargerSessionController.endSession(req, res));
 
-// Newly added SSE and REST logs (need Swagger documentation)
-router.get('/sessions/stream', (req, res) => chargerSessionController.streamSessions(req, res));
-router.get('sessions/logs', (req, res) => chargerSessionController.getLogs(req, res));
+/**
+ * @swagger
+ * /api/charger-sessions/sessions/stream:
+ *   get:
+ *     summary: Stream session events (SSE) for the charger session
+ *     description: Opens a SSE connection to stream real-time updates of charging session events (insert, update, delete).
+ *     tags:
+ *       - Charger Sessions
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Real-time stream of charger session events.
+ *         content:
+ *           text/event-stream:
+ *             schema:
+ *               type: string
+ *               example: "data: {\"sessionId\":\"123\",\"userId\":\"456\",\"status\":\"in_progress\",\"timestamp\":\"2025-09-01T12:00:00.000Z\",\"operationType\":\"insert\"}\n\n"
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/sessions/stream', authGuard(['admin']), (req: Request, res: Response) => chargerSessionController.streamSessions(req, res));
+
+/**
+ * @swagger
+ * /api/charger-sessions/sessions/logs:
+ *   get:
+ *     summary: Retrieve historical charger session logs
+ *     description: Fetches historical charger session events (insert, update, delete).  
+ *     tags:
+ *       - Charger Sessions
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 100
+ *         description: Maximum number of log entries to return.
+ *       - in: query
+ *         name: skip
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of log entries to skip (for pagination).
+ *     responses:
+ *       200:
+ *         description: Historical session logs retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   sessionId:
+ *                     type: string
+ *                     example: 123
+ *                   userId:
+ *                     type: string
+ *                     example: 456
+ *                   stationId:
+ *                     type: string
+ *                     example: 789
+ *                   status:
+ *                     type: string
+ *                     example: "in_progress"
+ *                   timestamp:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-09-07T04:00:00Z"
+ *                   operationType:
+ *                     type: string
+ *                     example: "insert"
+ *                   energyDelivered:
+ *                     type: number
+ *                     example: "10.0"
+ *                   cost:
+ *                     type: number
+ *                     example: "4.00"
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Failed to fetch logs
+ */
+router.get('sessions/logs', authGuard(['admin']), (req: Request, res: Response) => chargerSessionController.getLogs(req, res));
 
 export default router;
