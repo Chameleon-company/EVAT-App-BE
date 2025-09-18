@@ -150,7 +150,7 @@ export default class GamificationController {
      * Logs a user action, updates profile stats, grants points, and checks for quest/badge completion.
      */
     async logAction(req: Request, res: Response): Promise<Response> {
-        const { action_type, details, session_id } = req.body;
+        const { action_type, details = {}, session_id } = req.body;
         const userId = req.user?.id;
 
         if (!action_type) return res.status(400).json({ message: "Action type is required." });
@@ -521,4 +521,3 @@ export default class GamificationController {
         }
     }
 }
-
