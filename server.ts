@@ -16,6 +16,8 @@ import chargerRoutes from './src/routes/charger';
 import NavigationRoutes from "./src/routes/navigation-route";
 import FeedbackRoutes from "./src/routes/feedback-route";
 import ChargerReviewRoutes from "./src/routes/charger-review-route";
+import BookingRoutes from "./src/routes/booking-route";
+import SupportRequestRoutes from "./src/routes/support-request-route";
 import path from "path";
 
 dotenv.config();
@@ -68,7 +70,7 @@ const options = {
     ],
     servers: [{ url: `${DOMAIN_URL}:${PORT}` }],
   },
-  apis: ["./src/routes/*.ts", "./src/routes/*.js"],
+  apis: ["./src/routes/**/*.ts", "./src/routes/**/*.js"],
 };
 
 // Initialize swagger-jsdoc
@@ -97,7 +99,8 @@ app.use("/api/navigation", NavigationRoutes);
 app.use("/api/altChargers", chargerRoutes);
 app.use("/api/feedback", FeedbackRoutes);
 app.use("/api/charger-reviews", ChargerReviewRoutes);
-
+app.use("/api/bookings", BookingRoutes);
+app.use("/api/support-requests", SupportRequestRoutes);
 
 // Serve React frontend
 const buildPath = path.join(__dirname, "/build");
