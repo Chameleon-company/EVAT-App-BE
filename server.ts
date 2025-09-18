@@ -15,6 +15,7 @@ import cors from "cors";
 import chargerRoutes from './src/routes/charger';
 import NavigationRoutes from "./src/routes/navigation-route";
 import FeedbackRoutes from "./src/routes/feedback-route";
+import ChargerReviewRoutes from "./src/routes/charger-review-route";
 import path from "path";
 
 dotenv.config();
@@ -95,6 +96,7 @@ app.use('/api/chargers', StationRoutes); // As laid out in teams https://teams.m
 app.use("/api/navigation", NavigationRoutes);
 app.use("/api/altChargers", chargerRoutes);
 app.use("/api/feedback", FeedbackRoutes);
+app.use("/api/charger-reviews", ChargerReviewRoutes);
 
 
 // Serve React frontend
