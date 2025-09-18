@@ -10,7 +10,7 @@ const actionPoints: { [key: string]: number } = {
     fun_quiz_correct: 20,
     ask_chatbot_question: 20,
     use_route_planner: 25,
-    report_fault: 50,
+    report_fault: 25,
     validate_ai_prediction: 75,
     redeem_easter_egg: 100,
     complete_long_trip_with_planner: 150,
@@ -169,13 +169,25 @@ export default class GamificationController {
             }
 
             const summaryKey = `total_${action_type}s`;
-            if (summaryKey in userProfile.contribution_summary) {
+            if (userProfile.contribution_summary && summaryKey in userProfile.contribution_summary) {
                 (userProfile.contribution_summary as any)[summaryKey]++;
             }
 
             if (action_type === 'app_login') {
                 const today = new Date();
                 const lastLogin = userProfile.engagement_metrics.last_login_date;
+
+                // --- TEMPORARY BACKDOOR FOR FRONTEND TESTING ---
+                // This logic increments the streak on EVERY call, regardless of the day.
+                if (lastLogin) {
+                    userProfile.engagement_metrics.current_app_login_streak++;
+                } else {
+                    userProfile.engagement_metrics.current_app_login_streak = 1;
+                }
+                // --- END OF TEMPORARY BACKDOOR ---
+
+
+                /* --- ORIGINAL LOGIC TO RESTORE LATER ---
                 if (lastLogin) {
                     const yesterday = new Date();
                     yesterday.setDate(today.getDate() - 1);
@@ -187,6 +199,8 @@ export default class GamificationController {
                 } else {
                     userProfile.engagement_metrics.current_app_login_streak = 1;
                 }
+                */
+                
                 if (userProfile.engagement_metrics.current_app_login_streak > userProfile.engagement_metrics.longest_app_login_streak) {
                     userProfile.engagement_metrics.longest_app_login_streak = userProfile.engagement_metrics.current_app_login_streak;
                 }
@@ -206,11 +220,12 @@ export default class GamificationController {
 
             // TODO: Add logic to check and award quests/badges after profile update
 
-            return res.status(200).json({ message: "Action logged successfully", data: { new_balance: userProfile.gamification_profile.points_balance } });
+            return res.status(200).json({ message: "Action logged successfully", data: { new_balance: userProfile.gamification_profile.points_balance, updated_profile: userProfile } });
         } catch (error: any) {
             return res.status(500).json({ message: "Server error logging action.", error: error.message });
         }
     }
+
 
 
     //================================================
