@@ -15,12 +15,16 @@ import cors from "cors";
 import chargerRoutes from './src/routes/charger';
 import NavigationRoutes from "./src/routes/navigation-route";
 import path from "path";
+import ChargerSessionRoutes from "./src/routes/charger-session-route";
 
 dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 8080;
 const DOMAIN_URL = process.env.DOMAIN_URL || "http://localhost";
+
+// Mongoose deprecation warning for 'strictQuery'
+mongoose.set('strictQuery', true);
 
 connectDB();
 
@@ -93,6 +97,7 @@ app.use('/api/admin-auth', adminAuthRoutes);
 app.use('/api/chargers', StationRoutes); // As laid out in teams https://teams.microsoft.com/l/message/19:7206bda1ca594fa2a18709af5d9fb718@thread.v2/1743116771178?context=%7B%22contextType%22%3A%22chat%22%7D
 app.use("/api/navigation", NavigationRoutes);
 app.use("/api/altChargers", chargerRoutes);
+app.use("/api/charger-sessions", ChargerSessionRoutes);
 
 
 // Serve React frontend
