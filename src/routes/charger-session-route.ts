@@ -236,7 +236,7 @@ router.get('/station/:stationId', authGuard(['user', 'admin']), (req: Request, r
  *                 example: "456"
  *               stationId:
  *                 type: string
- *                example: "789"
+ *                 example: "789"
  *               startTime:
  *                 type: string
  *                 format: date-time
@@ -319,7 +319,7 @@ router.post('/', authGuard(['user', 'admin']), (req: Request, res: Response) => 
  *                       format: date-time
  *                       example: "2025-09-07T04:00:00Z"
  *       404:
- *         description: Charging session with the provided ID not found
+ *         description: Charging session with the provided ID not found or doesn't exist
  *         content:
  *           application/json:
  *             schema:
@@ -328,8 +328,6 @@ router.post('/', authGuard(['user', 'admin']), (req: Request, res: Response) => 
  *                 message:
  *                   type: string
  *                   example: "Session with ID 789 not found."
- *       404:
- *         description: Session not found
  */
 router.patch('/end/:sessionId', authGuard(['user', 'admin']), (req: Request, res: Response) => chargerSessionController.endSession(req, res));
 
@@ -419,6 +417,6 @@ router.get('/sessions/stream', authGuard(['admin']), (req: Request, res: Respons
  *       500:
  *         description: Failed to fetch logs
  */
-router.get('sessions/logs', authGuard(['admin']), (req: Request, res: Response) => chargerSessionController.getLogs(req, res));
+router.get('/sessions/logs', authGuard(['admin']), (req: Request, res: Response) => chargerSessionController.getLogs(req, res));
 
 export default router;
