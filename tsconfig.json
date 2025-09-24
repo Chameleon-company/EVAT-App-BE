@@ -8,7 +8,6 @@
     "skipLibCheck": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "typeRoots": ["./src/types", "./node_modules/@types"],
-    "types": ["node", "jest", "express"]
+    "typeRoots": ["./src/types", "./node_modules/@types"]
   }
 }
