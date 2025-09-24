@@ -335,7 +335,7 @@ router.patch('/end/:sessionId', authGuard(['user', 'admin']), (req: Request, res
  * @swagger
  * /api/charger-sessions/sessions/stream:
  *   get:
- *     summary: Stream session events (SSE) for the charger session
+ *     summary: Server-Sent Events (SSE) for the charger session
  *     description: Opens a SSE connection to stream real-time updates of charging session events (insert, update, delete).
  *     tags:
  *       - Charger Sessions
