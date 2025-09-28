@@ -3,8 +3,16 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IUser extends Document {
   email: string;
   password: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
+  mobile?: string;
   role: "user" | "admin";
+  paymentInfo?: {
+    cardNumber: string;
+    expiryDate: string;
+    cvv: { type: String },
+    billingAddress: string;
+  };
   refreshToken: string | null;
   refreshTokenExpiresAt: Date | null;
   lastLogin?: Date;
@@ -26,11 +34,28 @@ const UserSchema: Schema = new Schema<IUser>(
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters long"],
     },
-    fullName: { type: String },
+    firstName: { type: String }, lastName: { type: String },
+    mobile: {
+      type: String,
+      validate: {
+        validator: function (v: string) {
+          // Allow empty (optional) or Australian format 04XXXXXXXX
+          return !v || /^04\d{8}$/.test(v);
+        },
+        message: "Mobile number must have 10 digits starting with 04.",
+      },
+    },
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user",
+    },
+    // ⚠️ Not safe for real apps
+    paymentInfo: {
+      cardNumber: { type: String },
+      expiryDate: { type: String },
+      cvv: { type: String },
+      billingAddress: { type: String }
     },
     refreshToken: {
       type: String,
