@@ -4,12 +4,16 @@ export class UserItemResponse {
   constructor(user: IUser) {
     this.id = user.id;
     this.email = user.email;
-    this.fullName = user.fullName;
+    this.firstName = user.firstName;
+    this.lastName = user.lastName;
+    this.mobile = user.mobile;
     this.role = user.role;
   }
 
   id: string;
   email: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
+  mobile?: string;
   role: string;
 }

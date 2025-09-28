@@ -22,6 +22,49 @@ class VehicleRepository {
   async findAll(filter: FilterQuery<IVehicle> = {}): Promise<IVehicle[]> {
     return await Vehicle.find(filter).exec();
   }
+
+  /**
+   * Creates a new vehicle document
+   *
+   * @param data Minimal vehicle payload
+   * @returns The created vehicle record
+   */
+  async create(data: {
+    make: string;
+    model: string;
+    year: number;
+    ownerId?: string;
+  }): Promise<IVehicle> {
+    const doc = new Vehicle({
+      make: data.make,
+      model: data.model,
+      year: data.year,
+      ownerId: data.ownerId ?? undefined,
+    });
+    return await doc.save();
+  }
+
+  /**
+   * Updates an existing vehicle
+   *
+   * @param vehicleId Vehicle ID
+   * @param data Partial fields to update
+   * @returns The updated vehicle document, or null if not found
+   */
+  async update(
+    vehicleId: string,
+    data: Partial<{ make: string; model: string; year: number }>
+  ): Promise<IVehicle | null> {
+    return await Vehicle.findByIdAndUpdate(
+      vehicleId,
+      {
+        ...(data.make !== undefined ? { make: data.make } : {}),
+        ...(data.model !== undefined ? { model: data.model } : {}),
+        ...(data.year !== undefined ? { year: data.year } : {}),
+      },
+      { new: true, runValidators: true }
+    ).exec();
+  }
 }
 
 export default new VehicleRepository();

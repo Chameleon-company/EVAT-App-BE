@@ -5,7 +5,9 @@ import VehicleService from "../services/vehicle-service";
 
 const router = Router();
 const vehicleService = new VehicleService();
-const profileController = new VehicleController(vehicleService);
+const vehicleController = new VehicleController(vehicleService);
+
+// const profileController = new VehicleController(vehicleService);
 
 /**
  * @swagger
@@ -68,7 +70,7 @@ const profileController = new VehicleController(vehicleService);
  *         description: Server error
  */
 router.get("/:vehicleId", authGuard(["user", "admin"]), (req, res) =>
-  profileController.getVehicleById(req, res)
+  vehicleController.getVehicleById(req, res)
 );
 
 /**
@@ -102,7 +104,7 @@ router.get("/:vehicleId", authGuard(["user", "admin"]), (req, res) =>
  *         description: Server error
  */
 router.get("/", authGuard(["user", "admin"]), (req, res) =>
-  profileController.getAllVehicles(req, res)
+  vehicleController.getAllVehicles(req, res)
 );
 
 export default router;

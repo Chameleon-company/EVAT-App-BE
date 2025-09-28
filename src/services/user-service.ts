@@ -9,9 +9,18 @@ export default class UserService {
   async register(
     email: string,
     password: string,
-    fullName: string
+    firstName: string,
+    lastName: string,
+    mobile?: string
   ): Promise<any> {
     try {
+      // Validate mobile if provided
+      if (mobile && !/^04\d{8}$/.test(mobile)) {
+        throw new Error(
+          "Mobile number must be in Australian format (04XXXXXXXX)"
+        );
+      }
+
       // Check if there is an existing user with the given email
       const existingUser = await UserRepository.findByEmail(email);
       if (existingUser) {
@@ -26,7 +35,9 @@ export default class UserService {
       const newUser = new User();
       newUser.email = email;
       newUser.password = hashPass;
-      newUser.fullName = fullName;
+      newUser.firstName = firstName;
+      newUser.lastName = lastName;
+      if (mobile) newUser.mobile = mobile;
 
       return await UserRepository.create(newUser);
     } catch (e: unknown) {
@@ -48,7 +59,7 @@ export default class UserService {
       if (existingUser) {
         if (bcrypt.compareSync(password, existingUser.password)) {
           // Generate tokens
-          const accessToken = generateToken(existingUser, "1h");
+          const accessToken = generateToken(existingUser, "1d");
           const refreshToken = generateToken(existingUser, "1d");
 
           // Save refresh token to database
@@ -116,7 +127,7 @@ export default class UserService {
       }
 
       // Generate new tokens
-      const newAccessToken = generateToken(user, "1h");
+      const newAccessToken = generateToken(user, "1d");
       const newRefreshToken = generateToken(user, "1d");
 
       // Update refresh token in database
@@ -156,5 +167,40 @@ export default class UserService {
     const salt = await bcrypt.genSalt();
     const hashPassword = await bcrypt.hash(password, salt);
     return hashPassword;
+  }
+
+  /**
+   * Partially update the authenticated user's own profile.
+   */
+  async updateSelf(
+    userId: string,
+    updates: Partial<{
+      firstName: string;
+      lastName: string;
+      mobile: string;
+      email: string;
+    }>
+  ) {
+    const allowed: Record<string, unknown> = {};
+
+    if (typeof updates.firstName === "string") allowed.firstName = updates.firstName.trim();
+    if (typeof updates.lastName === "string") allowed.lastName = updates.lastName.trim();
+    if (typeof updates.mobile === "string") allowed.mobile = updates.mobile.trim();
+
+    if (typeof updates.email === "string") {
+      const email = updates.email.trim().toLowerCase();
+      const existing = await UserRepository.findOne({ email });
+      if (existing && String(existing._id) !== String(userId)) {
+        throw new Error("Email is already in use");
+      }
+      allowed.email = email;
+    }
+
+    if (Object.keys(allowed).length === 0) {
+      throw new Error("No valid fields to update");
+    }
+
+    const updated = await UserRepository.update({ _id: userId }, { $set: allowed });
+    return updated;
   }
 }
