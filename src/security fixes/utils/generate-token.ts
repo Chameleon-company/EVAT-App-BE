@@ -1,9 +1,9 @@
-import jwt from 'jsonwebtoken';
-
-export const generateToken = (user, expiresIn = "15m") => {
-  return jwt.sign(
-    { sub: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET!,
-    { expiresIn, algorithm: 'HS256', issuer: 'evat-api' }
-  );
-};
+const token = jwt.sign(
+  { id: user.id, email: user.email, role: user.role },
+  secret as string,
+  {
+    expiresIn: period ? period : "1d",
+    issuer: process.env.JWT_ISSUER || "api",
+    audience: process.env.JWT_AUDIENCE || "web",
+  }
+);

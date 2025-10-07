@@ -1,3 +1,7 @@
+function isEmail(x: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x); }
+function nonEmpty(x?: string) { return !!x && x.trim().length > 0; }
+
+
 import e, { Request, Response } from "express";
 import UserService from "../services/user-service";
 import { UserItemResponse } from "../dtos/user-item-response";

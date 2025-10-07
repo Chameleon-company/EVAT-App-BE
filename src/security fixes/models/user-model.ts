@@ -1,6 +1,6 @@
-- paymentInfo: {
--   cardNumber: { type: String },
--   expiryDate: { type: String },
--   cvv: { type: String },
--   billingAddress: { type: String }
-- },
+paymentInfo: {
+  cardNumber:   { type: String, select: false },
+  expiryDate:   { type: String, select: false },
+  cvv:          { type: String, select: false },
+  billingAddress:{ type: String, select: false },
+},
