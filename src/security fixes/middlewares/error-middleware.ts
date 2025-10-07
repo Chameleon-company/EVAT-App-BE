@@ -1,15 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+// Fix in error-middleware.ts
+export const errorHandler = (err, req, res, next) => {
+  console.error(err); // log internally
+  const status = err.status || 500;
+  const message = process.env.NODE_ENV === "production"
+    ? "Something went wrong"
+    : err.message;
 
-const notFound = async (req: Request, res: Response, next: NextFunction) => {
-  const error = new Error(`Not Found ${req.originalUrl}`);
-  res.status(404);
-  next(error);
+  res.status(status).json({ message });
 };
-
-const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode);
-  res.json({ success: false, message: err.message });
-};
-
-export { notFound, errorHandler };

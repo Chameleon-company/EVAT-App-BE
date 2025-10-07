@@ -1,17 +1,10 @@
-import crypto from 'crypto';
+// Fix in admin-auth-controller.ts (inside signup/login functions)
+import bcrypt from "bcrypt";
 
-function hashCode(code: string) {
-  return crypto.createHash('sha256').update(code).digest('hex');
-}
+// Example fix during signup:
+const hashedPassword = await bcrypt.hash(password, 10);
+await Admin.create({ email, password: hashedPassword });
 
-// Generate code
-const rawCode = Math.floor(100000 + Math.random() * 900000).toString();
-admin.twoFactorCode = hashCode(rawCode);
-admin.twoFactorCodeExpiry = new Date(Date.now() + 5 * 60 * 1000);
-await admin.save();
-// send `rawCode` via email
-
-// Verify code
-if (hashCode(providedCode) !== admin.twoFactorCode || new Date() > admin.twoFactorCodeExpiry) {
-  return res.status(400).json({ message: 'Invalid/Expired code' });
-}
+// Example fix during login:
+const isMatch = await bcrypt.compare(password, admin.password);
+if (!isMatch) throw new Error("Invalid credentials");
