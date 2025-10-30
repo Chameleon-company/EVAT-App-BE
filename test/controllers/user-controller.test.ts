@@ -2,6 +2,15 @@ import { Request, Response } from "express";
 import UserController from "../../src/controllers/user-controller";
 import UserService from "../../src/services/user-service";
 import { UserItemResponse } from "../../src/dtos/user-item-response";
+import jwt from "jsonwebtoken";
+import generateToken from "../../src/utils/generate-token";
+
+jest.mock("jsonwebtoken");
+jest.mock("../../src/utils/generate-token", () => ({
+    __esModule: true,
+    default: jest.fn()
+}));
+
 
 // Mock the UserService
 jest.mock("../../src/services/user-service");
@@ -354,6 +363,124 @@ describe("UserController", () => {
     });
   });
 
+
+
+    describe("jwtLogin", () => {
+        test("Case: No authorization header", async () => {
+            // Arrange
+            mockRequest.headers = {};
+
+            // Act
+            await userController.jwtLogin(mockRequest as Request, mockResponse as Response);
+
+            // Assert
+            expect(statusMock).toHaveBeenCalledWith(401);
+            expect(jsonMock).toHaveBeenCalledWith({ message: "No token provided" });
+        });
+
+        test("Case: Valid token, user found", async () => {
+            // Arrange
+            const mockUser = { id: "1", email: "test@example.com", save: jest.fn() };
+            (jwt.verify as jest.Mock).mockReturnValue({ id: "1" });
+            mockUserService.getUserById = jest.fn().mockResolvedValue(mockUser);
+            mockRequest.headers = { authorization: "Bearer validtoken" };
+
+            // Act
+            await userController.jwtLogin(mockRequest as Request, mockResponse as Response);
+
+            // Assert
+            expect(mockUserService.getUserById).toHaveBeenCalledWith("1");
+            expect(statusMock).toHaveBeenCalledWith(200);
+            expect(jsonMock).toHaveBeenCalledWith({
+                message: "Automatic Login Successful",
+                data: {
+                    user: mockUser,
+                    accessToken: "validtoken"
+                }
+            });
+        });
+
+        test("Case: Valid token but user not found", async () => {
+            // Arrange
+            (jwt.verify as jest.Mock).mockReturnValue({ id: "2" });
+            mockUserService.getUserById = jest.fn().mockResolvedValue(null);
+            mockRequest.headers = { authorization: "Bearer othertoken" };
+
+            // Act
+            await userController.jwtLogin(mockRequest as Request, mockResponse as Response);
+
+            // Assert
+            expect(statusMock).toHaveBeenCalledWith(404);
+            expect(jsonMock).toHaveBeenCalledWith({ message: "User not found" });
+        });
+
+        test("Case: Expired token but refresh token still valid", async () => {
+            // Arrange
+            (jwt.verify as jest.Mock).mockImplementation(() => { throw new Error("TokenExpiredError"); });
+            (jwt.decode as jest.Mock).mockReturnValue({ id: "3" });
+
+            const mockUser = {
+                id: "3",
+                refreshTokenExpiresAt: new Date(Date.now() + 10000),
+                save: jest.fn()
+            };
+            mockUserService.getUserById = jest.fn().mockResolvedValue(mockUser);
+            (generateToken as jest.Mock).mockReturnValue("new-access-token");
+            mockRequest.headers = { authorization: "Bearer expiredtoken" };
+
+            // Act
+            await userController.jwtLogin(mockRequest as Request, mockResponse as Response);
+
+            // Assert
+            expect(generateToken).toHaveBeenCalledWith(mockUser, "1h");
+            expect(statusMock).toHaveBeenCalledWith(200);
+            expect(jsonMock).toHaveBeenCalledWith({
+                message: "Automatic Login Successful",
+                data: {
+                    user: mockUser,
+                    accessToken: "new-access-token"
+                }
+            });
+        });
+
+        test("Case: Expired token and refresh token expired", async () => {
+            // Arrange
+            (jwt.verify as jest.Mock).mockImplementation(() => { throw new Error("TokenExpiredError"); });
+            (jwt.decode as jest.Mock).mockReturnValue({ id: "4" });
+
+            const mockUser = {
+                id: "4",
+                refreshTokenExpiresAt: new Date(Date.now() - 10000)
+            };
+            mockUserService.getUserById = jest.fn().mockResolvedValue(mockUser);
+            mockRequest.headers = { authorization: "Bearer expiredtoken" };
+
+            // Act
+            await userController.jwtLogin(mockRequest as Request, mockResponse as Response);
+
+            // Assert
+            expect(statusMock).toHaveBeenCalledWith(401);
+            expect(jsonMock).toHaveBeenCalledWith({
+                message: "Refresh token expired, please log in again"
+            });
+        });
+
+        test("Case: Invalid token structure", async () => {
+            // Arrange
+            (jwt.verify as jest.Mock).mockImplementation(() => { throw new Error("Invalid token"); });
+            (jwt.decode as jest.Mock).mockReturnValue(null);
+            mockRequest.headers = { authorization: "Bearer badtoken" };
+
+            // Act
+            await userController.jwtLogin(mockRequest as Request, mockResponse as Response);
+
+            // Assert
+            expect(statusMock).toHaveBeenCalledWith(401);
+            expect(jsonMock).toHaveBeenCalledWith({ message: "Invalid token" });
+        });
+    });
+
+  
   describe("getAllUser", () => {
     test("Case: Successfully get all users", async () => {
       // Arrange
