@@ -1,11 +1,21 @@
-import { Router } from "express";
+// Express routes
+
+import express from "express";
+import {Request, Response} from 'express';
+
 import ChargerReviewController from "../controllers/charger-review-controller";
 import ChargerReviewService from "../services/charger-review-service";
+import ChargerReviewRepository from "../repositories/charger-review-repository";
+
+// Middleware
 import { authGuard } from "../middlewares/auth-middleware";
 
-const router = Router();
+// Initialise router
+const router = express.Router();
+
 const chargerReviewService = new ChargerReviewService();
 const chargerReviewController = new ChargerReviewController(chargerReviewService);
+
 
 /**
  * @swagger

@@ -35,15 +35,15 @@ export default class ProfileService {
     }
   }
 
-    /**
-     * Adds a station to the user's list of favourite stations
-     * If the user profile doesn't exist, it creates one and adds the station to the users favourite
-     * else, it will append the station to the users list of favourite stations
-     * 
-     * @param userId The ID of the user object | user_id (String), user_car_model (String), favourite_station (Array[String]), createdAt (Date), updatedAt (Date)
-     * @param stationId The ID of the station to add to favourites
-     * @returns The updated or created profile
-     */
+  /**
+   * Adds a station to the user's list of favourite stations
+   * If the user profile doesn't exist, it creates one and adds the station to the users favourite
+   * else, it will append the station to the users list of favourite stations
+   * 
+   * @param userId The ID of the user object | user_id (String), user_car_model (String), favourite_station (Array[String]), createdAt (Date), updatedAt (Date)
+   * @param stationId The ID of the station to add to favourites
+   * @returns The updated or created profile
+   */
   async addFavouriteStation(userId: string, stationId: string): Promise<any> {
     try {
       // Check if there is an existing tracking for this userId

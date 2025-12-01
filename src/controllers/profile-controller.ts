@@ -162,4 +162,38 @@ export default class ProfileController {
       return res.status(400).json({ message: error.message });
     }
   }
+
+  /**
+   * Function to get a users first and last names by their ID
+   * 
+   * @param req Request object containing the user ID 
+   * @param res Response object used to send back the HTTP response
+   * @returns Returns the status code, a relevant message, and the data if the request was successful
+   */
+  async getUsernameByID(req: Request, res: Response): Promise<Response> {
+    const { userID } = req.params;
+    
+    try {
+      const foundUser = await this.userService.getUserById(userID);
+
+      if (foundUser == null) {
+        return res.status(404).json({
+          message: "User not found"
+        });
+      }
+
+      var returnData = {
+        firstName: foundUser?.firstName ?? foundUser?.fullName ?? "Unknown", // See IUser for details
+        lastName: foundUser?.lastName ?? "" // If the user has a full name set then that will be displayed, other wise if they have neither first or last it will show as "Unknown"
+      }
+      console.log(typeof(returnData))
+      return res.status(200).json({
+        message: "success",
+        data: returnData
+      });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  }
+
 }
