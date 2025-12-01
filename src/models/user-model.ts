@@ -3,8 +3,11 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IUser extends Document {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  // Depending on how the user was created it may not have any first, last, or full name values.
+  // This makes relying on any of these requiring default values
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
   mobile?: string;
   role: "user" | "admin";
   paymentInfo?: {
@@ -34,7 +37,7 @@ const UserSchema: Schema = new Schema<IUser>(
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters long"],
     },
-    firstName: { type: String }, lastName: { type: String },
+    firstName: { type: String }, lastName: { type: String }, fullName: { type: String },
     mobile: {
       type: String,
       validate: {

@@ -21,69 +21,78 @@ const profileController = new ProfileController(
 /**
  * @swagger
  * components:
- *   schemas:
- *     VehicleModel:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *         make:
- *           type: string
- *         model:
- *           type: string
- *         year:
- *           type: number
- *     ChargingStation:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         location:
- *           type: object
- *           properties:
- *             type:
- *               type: string
- *               example: "Point"
- *             coordinates:
- *               type: array
- *               items:
- *                 type: number
- *               example: [145.1679215, -37.9420423]
- *         cost:
- *           type: string
- *         charging_points:
- *           type: number
- *         pay_at_location:
- *           type: string
- *         membership_required:
- *           type: string
- *         access_key_required:
- *           type: string
- *         is_operational:
- *           type: string
- *         latitude:
- *           type: number
- *         longitude:
- *           type: number
- *         operator:
- *           type: string
- *         connection_type:
- *           type: string
- *         current_type:
- *           type: string
- *         charging_points_flag:
- *           type: number
- *     UserProfile:
- *       type: object
- *       properties:
- *         userId:
- *           type: string
- *         user_car_model:
- *           $ref: '#/components/schemas/VehicleModel'
- *         favourite_stations:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/ChargingStation'
+ *     schemas:
+ *         VehicleModel:
+ *             type: object
+ *             properties:
+ *                 id:
+ *                     type: string
+ *                 make:
+ *                     type: string
+ *                 model:
+ *                     type: string
+ *                 year:
+ *                     type: number
+ *         ChargingStation:
+ *             type: object
+ *             properties:
+ *                 _id:
+ *                     type: string
+ *                 location:
+ *                     type: object
+ *                     properties:
+ *                         type:
+ *                             type: string
+ *                             example: Point
+ *                         coordinates:
+ *                             type: array
+ *                             items:
+ *                                 type: number
+ *                             example:
+ *                                 - 145.1679215
+ *                                 - -37.9420423
+ *                 cost:
+ *                     type: string
+ *                 charging_points:
+ *                     type: number
+ *                 pay_at_location:
+ *                     type: string
+ *                 membership_required:
+ *                     type: string
+ *                 access_key_required:
+ *                     type: string
+ *                 is_operational:
+ *                     type: string
+ *                 latitude:
+ *                     type: number
+ *                 longitude:
+ *                     type: number
+ *                 operator:
+ *                     type: string
+ *                 connection_type:
+ *                     type: string
+ *                 current_type:
+ *                     type: string
+ *                 charging_points_flag:
+ *                     type: number
+ *         UserProfile:
+ *             type: object
+ *             properties:
+ *                 userId:
+ *                     type: string
+ *                 user_car_model:
+ *                     $ref: '#/components/schemas/VehicleModel'
+ *                 favourite_stations:
+ *                     type: array
+ *                     items:
+ *                         $ref: '#/components/schemas/ChargingStation'
+ *         Username:
+ *             type: object
+ *             properties:
+ *                 firstName:
+ *                   type: string
+ *                 lastName:
+ *                   type: string
  */
 
 /**
@@ -252,6 +261,48 @@ router.post(
   "/remove-favourite-station",
   authGuard(["user", "admin"]),
   (req, res) => profileController.deleteFavouriteStation(req, res)
+);
+
+/**
+ * @swagger
+ * /api/profile/username/{userID}:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Get a username by ID
+ *     description: Retrieve a provided user ID's first and last name for review lookup
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userID
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user's ID
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user's name
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "success"
+ *                 data:
+ *                   $ref: '#/components/schemas/Username'
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/username/:userID",
+  authGuard(["user", "admin"]),
+  (req, res) => profileController.getUsernameByID(req, res)
 );
 
 export default router;
