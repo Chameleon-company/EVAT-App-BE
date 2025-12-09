@@ -12,7 +12,7 @@ const router = Router();
 
 /**
  * @swagger
- * /api/booking-requests:
+ * /api/bookings:
  *   post:
  *     summary: Create a booking
  *     description: Pass the userId of the logged-in user via header "x-user-id" (preferred) or include "userId" in the request body.
@@ -47,7 +47,7 @@ router.post("/", createBooking);
 
 /**
  * @swagger
- * /api/booking-requests/me:
+ * /api/bookings/me:
  *   get:
  *     summary: List my bookings
  *     description: Provide the userId via header "x-user-id" (preferred) or query "?userId=".
