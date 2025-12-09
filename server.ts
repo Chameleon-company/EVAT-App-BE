@@ -16,7 +16,11 @@ import chargerRoutes from './src/routes/charger';
 import NavigationRoutes from "./src/routes/navigation-route";
 import path from "path";
 import ChargerSessionRoutes from "./src/routes/charger-session-route";
+import FeedbackRoutes from "./src/routes/feedback-route";
 import ChargerReviewRoutes from "./src/routes/charger-review-route";
+import BookingRoutes from "./src/routes/booking-route";
+import GamificationRoutes from "./src/routes/gamification-route";
+import SupportRequestRoutes from "./src/routes/support-request-route";
 
 dotenv.config();
 
@@ -99,7 +103,11 @@ app.use('/api/chargers', StationRoutes); // As laid out in teams https://teams.m
 app.use("/api/navigation", NavigationRoutes);
 app.use("/api/altChargers", chargerRoutes);
 app.use("/api/charger-sessions", ChargerSessionRoutes);
+app.use("/api/feedback", FeedbackRoutes);
 app.use("/api/charger-reviews", ChargerReviewRoutes);
+app.use("/api/bookings", BookingRoutes);
+app.use("/api/gamification", GamificationRoutes);
+app.use("/api/support-requests", SupportRequestRoutes);
 
 
 // Serve React frontend

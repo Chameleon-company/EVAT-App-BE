@@ -54,7 +54,9 @@ describe("UserController", () => {
       const userData = {
         email: "test@example.com",
         password: "password123",
-        fullName: "Test User"
+        firstName: "Test User FirstName",
+        lastName: "Test User LastName",
+        mobile: "0412345678"
       };
       mockRequest.body = userData;
 
@@ -68,7 +70,9 @@ describe("UserController", () => {
       expect(mockUserService.register).toHaveBeenCalledWith(
         userData.email,
         userData.password,
-        userData.fullName
+        userData.firstName,
+        userData.lastName,
+        userData.mobile,
       );
       expect(statusMock).toHaveBeenCalledWith(201);
       expect(jsonMock).toHaveBeenCalledWith({
@@ -82,7 +86,9 @@ describe("UserController", () => {
       const userData = {
         email: "test@example.com",
         password: "password123",
-        fullName: "Test User"
+        firstName: "Test User FirstName",
+        lastName: "Test User LastName",
+        mobile: "Test User Mobile",
       };
       mockRequest.body = userData;
 
@@ -96,7 +102,9 @@ describe("UserController", () => {
       expect(mockUserService.register).toHaveBeenCalledWith(
         userData.email,
         userData.password,
-        userData.fullName
+        userData.firstName,
+        userData.lastName,
+        userData.mobile,
       );
       expect(statusMock).toHaveBeenCalledWith(400);
       expect(jsonMock).toHaveBeenCalledWith({
@@ -117,7 +125,9 @@ describe("UserController", () => {
       const mockUser = {
         id: "1",
         email: loginData.email,
-        fullName: "Test User"
+        firstName: "Test User FirstName",
+        lastName: "Test User LastName",
+        mobile: "Test User Mobile"
       };
       const mockAuthResponse = {
         data: mockUser,
@@ -240,7 +250,9 @@ describe("UserController", () => {
       const mockUser = {
         id: userId,
         email: "test@example.com",
-        fullName: "Test User"
+        firstName: "Test User FirstName",
+        lastName: "Test User LastName",
+        mobile: "Test User Mobile"
       };
       mockUserService.getUserById = jest.fn().mockResolvedValue(mockUser);
 
@@ -305,7 +317,9 @@ describe("UserController", () => {
       const mockUser = {
         id: "user123",
         email: userEmail,
-        fullName: "Test User"
+        firstName: "Test User FirstName",
+        lastName: "Test User LastName",
+        mobile: "Test User Mobile"
       };
       mockUserService.getUserByEmail = jest.fn().mockResolvedValue(mockUser);
 
@@ -318,7 +332,9 @@ describe("UserController", () => {
       expect(jsonMock).toHaveBeenCalledWith({
         data: expect.objectContaining({
           email: userEmail,
-          fullName: mockUser.fullName,
+          firstName: mockUser.firstName,
+          lastName: mockUser.lastName,
+          mobile: mockUser.mobile,
           id: mockUser.id,
         }),
         message: "success",
@@ -485,8 +501,8 @@ describe("UserController", () => {
     test("Case: Successfully get all users", async () => {
       // Arrange
       const mockUsers = [
-        { id: "1", email: "user1@example.com", fullName: "User One" },
-        { id: "2", email: "user2@example.com", fullName: "User Two" }
+        { id: "1", email: "user1@example.com", firstName: "User One FirstName", lastName: "User One LastName", mobile: "0142345678" },
+        { id: "2", email: "user2@example.com", firstName: "User Two FirstName", lastName: "User Two LastName", mobile: "0142345678" }
       ];
       mockUserService.getAllUser = jest.fn().mockResolvedValue(mockUsers);
 
