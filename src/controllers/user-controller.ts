@@ -1,7 +1,15 @@
 import e, { Request, Response } from "express";
 import UserService from "../services/user-service";
 import { UserItemResponse } from "../dtos/user-item-response";
+import jwt from "jsonwebtoken";
+import generateToken from "../utils/generate-token";
 
+interface JwtPayload {
+    id: string;
+    email?: string;
+    role?: string;
+    admin?: boolean;
+}
 
 export default class UserController {
   constructor(private readonly userService: UserService) {}
@@ -26,6 +34,91 @@ export default class UserController {
     }
   }
 
+    /**
+     * Function to be called to see if the user's access/refresh tokens are still valid
+     *
+     * @param req Request object containing the authorization header with the JWT
+     * @param res Response object used to send back the HTTP response
+     * @returns Returns the status code which will be used to deny or allow the user to skip the login screen
+     */
+    async jwtLogin(req: Request, res: Response): Promise<Response> {
+
+        try {
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith("Bearer ")) {
+                return res.status(401).json({ message: "No token provided" });
+            }
+
+            if (!process.env.JWT_SECRET) {
+                throw new Error("JWT_SECRET is not set in environment variables");
+            }
+
+            const token = authHeader.split(" ")[1];
+
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
+                const user = await this.userService.getUserById(decoded.id);
+                if (!user) {
+                    return res.status(404).json({ message: "User not found" });
+                }
+
+                // Update last login
+                //user.lastLogin = new Date();
+                await user.save();
+
+                return res.status(200).json({
+                    message: "Automatic Login Successful",
+                    data: {
+                        user,
+                        accessToken: token, // same one, still valid
+                    },
+                });
+            } catch (err) {
+
+                const decoded = jwt.decode(token) as JwtPayload;
+                if (!decoded?.id) {
+                    return res.status(401).json({ message: "Invalid token" });
+                }
+
+                const user = await this.userService.getUserById(decoded.id);
+                if (!user || !user.refreshTokenExpiresAt) {
+                    return res.status(404).json({ message: "User or refresh token not found" });
+                }
+
+                const nowUnix = Math.floor(Date.now() / 1000);
+                const refreshTokenExpiryUnix = Math.floor(
+                    new Date(user.refreshTokenExpiresAt).getTime() / 1000
+                );
+
+                if (refreshTokenExpiryUnix > nowUnix) {
+                    // if still valid, make a new AccessToken
+                    const newAccessToken = generateToken(user, "1h");
+
+                    // Update last login
+                    //user.lastLogin = new Date();
+                    await user.save();
+
+                    // OK status with data and a new AccessToken
+                    return res.status(200).json({
+                        message: "Automatic Login Successful",
+                        data: {
+                            user,
+                            accessToken: newAccessToken,
+                        },
+                    });
+
+                } else {
+                    return res.status(401).json({ message: "Refresh token expired, please log in again" });
+                }
+            }
+        } catch (error: any) {
+            console.error("jwtLogin error:", error);
+            return res.status(500).json({ message: "Internal server error", error: error.message });
+        }
+    }
+
+  
+  
   /**
    * Handles a login request
    * 
