@@ -1,26 +1,30 @@
 import express, { Application } from "express";
 import dotenv from "dotenv";
-import connectDB from "./src/config/database-config";
 import mongoose from 'mongoose';
 import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
-import { notFound, errorHandler } from "./src/middlewares/error-middleware";
-import UserRoutes from "./src/routes/user-route";
-import ProfileRoutes from "./src/routes/profile-route";
-import VehicleRoutes from "./src/routes/vehicle-route";
-import StationRoutes from "./src/routes/station-route";
-import adminAuthRoutes from "./src/routes/admin-auth-route";
-import adminRoutes from "./src/routes/admin-route";
 import cors from "cors";
+import path from "path";
+
+import connectDB from "./src/config/database-config";
+import { notFound, errorHandler } from "./src/middlewares/error-middleware";
+
+// Routes
 import chargerRoutes from './src/routes/charger';
 import NavigationRoutes from "./src/routes/navigation-route";
-import path from "path";
 import ChargerSessionRoutes from "./src/routes/charger-session-route";
 import FeedbackRoutes from "./src/routes/feedback-route";
 import ChargerReviewRoutes from "./src/routes/charger-review-route";
 import BookingRoutes from "./src/routes/booking-route";
 import GamificationRoutes from "./src/routes/gamification-route";
 import SupportRequestRoutes from "./src/routes/support-request-route";
+import UserRoutes from "./src/routes/user-route";
+import ProfileRoutes from "./src/routes/profile-route";
+import VehicleRoutes from "./src/routes/vehicle-route";
+import StationRoutes from "./src/routes/station-route";
+import adminAuthRoutes from "./src/routes/admin-auth-route";
+import adminRoutes from "./src/routes/admin-route";
+import PredictRoutes from "./src/routes/predict-route";
 
 dotenv.config();
 
@@ -108,6 +112,7 @@ app.use("/api/charger-reviews", ChargerReviewRoutes);
 app.use("/api/bookings", BookingRoutes);
 app.use("/api/gamification", GamificationRoutes);
 app.use("/api/support-requests", SupportRequestRoutes);
+app.use("/api/predict", PredictRoutes);
 
 
 // Serve React frontend
