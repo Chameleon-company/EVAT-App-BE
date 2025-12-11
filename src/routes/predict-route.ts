@@ -60,6 +60,14 @@ const predictController = new PredictController(predictService);
  *                 message:
  *                   type: string
  *                   example: "Congestion levels received successfully"
+ *                 congestionLevels:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     example:
+ *                       _id: "693a452649ade06c98d08df2"
+ *                       chargerId: "674f98013dc8e5d2ac00894a"
+ *                       congestion_level: "low"
  *                 data:
  *                   $ref: '#/components/schemas/StationCongestion'
  *       400:
