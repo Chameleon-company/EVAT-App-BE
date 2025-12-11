@@ -9,7 +9,7 @@ jest.mock("../../src/models/game-model", () => {
     const mockSave = jest.fn().mockResolvedValue(this);
     const mockModel = jest.fn().mockImplementation(() => ({
         save: mockSave,
-    }));
+    })) as any;
 
     // Attach static methods
     mockModel.create = jest.fn();
