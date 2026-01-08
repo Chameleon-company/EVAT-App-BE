@@ -1,5 +1,6 @@
 import PredictRepository from "../repositories/predict-repository";
 import Congestion, { ICongestion } from "../models/congestion-model";
+import mongoose from "mongoose";
 
 
 export default class PredictService {
@@ -20,21 +21,23 @@ export default class PredictService {
             }
             let result = await PredictRepository.getCongestionByIDs(chargerIDs);
 
+            // Filter to only keep entries that match the requested chargerIDs
+            result.congestionLevels = result.congestionLevels.filter(
+                (level) => chargerIDs.includes(level.chargerId.toString())
+            );
+
+            // Add entries for any requested chargerIDs that weren't found
             for (let i = 0; i < chargerIDs.length; i++) {
                 if (!result.congestionLevels.some(
-                    (level) => level.chargerId === chargerIDs[i]
+                    (level) => level.chargerId.toString() === chargerIDs[i]
                 )) {
-                    // Create a new entry for any unknown stations
                     const newCongestion = new Congestion({
-                        chargerId: chargerIDs[i],
+                        chargerId: new mongoose.Types.ObjectId(chargerIDs[i]),
                         congestion_level: "unknown"
                     });
-
                     result.congestionLevels.push(newCongestion);
                 }
             }
-
-
             return result
 
         }
@@ -46,4 +49,46 @@ export default class PredictService {
             }
         }
     }
+
+    /**
+     * Deletes a congestion level for A chargers
+     * 
+     * @param chargerID Array of one or more charger ID strings
+     * @returns boolean containing true for success or false for failure
+     */
+    async deleteCongestionLevel(chargerID: string
+    ): Promise<boolean> {
+        try {
+            let result = await PredictRepository.deleteCongestionLevel(chargerID);
+            return result;
+        } catch (error: any) {
+            if (error instanceof Error) {
+                throw new Error("Error retrieving congestion levels: " + error.message);
+            } else {
+                throw new Error("An unknown error occurred while retrieving congestion levels");
+            }
+        }
+    }
+
+    /**
+     * Deletes a congestion level for A chargers
+     * 
+     * @param chargerID Array of one or more charger ID strings
+     * @param level String of either 'low', 'medium', 'high'
+     * @returns boolean containing true for success or false for failure
+     */
+    async putCongestionLevel(chargerID: string, level: string
+    ): Promise<boolean> {
+        try {
+            let result = await PredictRepository.putCongestionLevel(chargerID, level);
+            return result;
+        } catch (error: any) {
+            if (error instanceof Error) {
+                throw new Error("Error updating congestion levels: " + error.message);
+            } else {
+                throw new Error("An unknown error occurred while updating congestion levels");
+            }
+        }
+    }
+
 }
