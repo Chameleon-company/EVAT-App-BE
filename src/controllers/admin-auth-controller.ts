@@ -39,7 +39,7 @@ export const adminLogin = async (req: Request, res: Response) => {
 
     await transporter.sendMail({
       from: `"EVAT Admin" <${process.env.EMAIL_USER}>`,
-      to: process.env.ADMIN_EMAIL || 'musajee2002@gmail.com', // ✅ no hardcoded email
+      to: process.env.ADMIN_EMAIL, // Don't hardcode emails!
       subject: 'Your EVAT Admin 2FA Code',
       text: `Your verification code is: ${code}`,
       html: `<h3>Your EVAT Admin Login Code:</h3><p><b>${code}</b></p>`

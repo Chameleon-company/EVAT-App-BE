@@ -1,16 +1,16 @@
 import { query } from "express";
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface ICongestion extends Document {
-  chargerId: string;
+  chargerId: Types.ObjectId;
   congestion_level: string // "low", "Medium", "High", "Unknown"
 }
 const CongestionSchema: Schema = new Schema<ICongestion>(
   {
     chargerId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'Charger',
       required: [true, "Charger ID is required"],
-      trim: true,
       unique: true
     },
     congestion_level: {
@@ -20,12 +20,11 @@ const CongestionSchema: Schema = new Schema<ICongestion>(
     }
   },
   {
-    timestamps: true,
+    timestamps: false,
     versionKey: false,
   },
 );
 
-CongestionSchema.index({ chargerId: 1, createdAt: -1 });
 CongestionSchema.index({ chargerId: 1, congestion_level: 1 }, { unique: true }); // One level per user per charger
 
 const Congestion = mongoose.model<ICongestion>("Congestion", CongestionSchema, "congestion");

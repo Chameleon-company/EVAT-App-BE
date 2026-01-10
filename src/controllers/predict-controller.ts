@@ -11,7 +11,6 @@ export default class PredictController {
        * @param res Response object used to send back the HTTP response
        * @returns Returns the status code, a relevant message, and the data if the request was successful
        * */
-
     async getCongestionLevels(req: Request, res: Response): Promise<Response> {
         try {
             const chargerIDs = req.body.stationIds;
@@ -34,4 +33,64 @@ export default class PredictController {
         }
     }
 
+    /**
+       * Deletes the congestion level for a charger
+       * 
+       * @param req Request object containing the query parameter for an ID
+       * @param res Response object used to send back the HTTP response
+       * @returns Returns the status code, a relevant message
+       * */
+    async deleteCongestionLevel(req: Request, res: Response): Promise<Response> {
+        try {
+            const chargerID = req.query.id;
+            if (typeof (chargerID) === "string") {
+
+                const result = await this.predictService.deleteCongestionLevel(chargerID);
+
+                if (result == false) {
+                    return res.status(500).json({ message: "Unknown error occurred, does this ID exist?" });
+                } else {
+                    return res.status(201).json({ message: "Congestion level deleted successfully" });
+                }
+            } else {
+                return res.status(400).json({ message: "ID parameter must be a string" });
+            }
+
+        } catch (error: any) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+
+    /**
+       * Adds or updates the congestion level for a charger
+       * 
+       * @param req Request object containing the query parameter for an ID and congestion level
+       * @param res Response object used to send back the HTTP response
+       * @returns Returns the status code, a relevant message
+       * */
+    async putCongestionLevel(req: Request, res: Response): Promise<Response> {
+        try {
+            const chargerID = req.query.id;
+            const level = req.query.level;
+            if (typeof (chargerID) === "string") {
+                if ((level == "low") || (level == "medium") || (level == "high")) {
+
+                    const result = await this.predictService.putCongestionLevel(chargerID, level);
+
+                    if (result == false) {
+                        return res.status(500).json({ message: "Unknown error occurred" });
+                    } else {
+                        return res.status(201).json({ message: "Congestion level updated successfully" });
+                    }
+                } else {
+                    return res.status(400).json({ message: "Level must be 'low', 'medium', or 'high'" });
+                }
+            } else {
+                return res.status(400).json({ message: "ID parameter must be a string" });
+            }
+
+        } catch (error: any) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
 }
