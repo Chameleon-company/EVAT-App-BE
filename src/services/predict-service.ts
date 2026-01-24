@@ -51,7 +51,7 @@ export default class PredictService {
     }
 
     /**
-     * Deletes a congestion level for A chargers
+     * Deletes a congestion level for a chargers
      * 
      * @param chargerID Array of one or more charger ID strings
      * @returns boolean containing true for success or false for failure
@@ -71,7 +71,7 @@ export default class PredictService {
     }
 
     /**
-     * Deletes a congestion level for A chargers
+     * Updates a congestion level for a chargers
      * 
      * @param chargerID Array of one or more charger ID strings
      * @param level String of either 'low', 'medium', 'high'
@@ -81,6 +81,26 @@ export default class PredictService {
     ): Promise<boolean> {
         try {
             let result = await PredictRepository.putCongestionLevel(chargerID, level);
+            return result;
+        } catch (error: any) {
+            if (error instanceof Error) {
+                throw new Error("Error updating congestion levels: " + error.message);
+            } else {
+                throw new Error("An unknown error occurred while updating congestion levels");
+            }
+        }
+    }
+
+    /**
+     * updates a congestion levels for multiple chargers
+     * 
+     * @param level Array of dictionaries with a charger_id and level
+     * @returns boolean containing true for success or false for failure
+     */
+    async postCongestionLevelsBatch(levels: Array<object>
+    ): Promise<boolean> {
+        try {
+            let result = await PredictRepository.postCongestionLevelsBatch(levels);
             return result;
         } catch (error: any) {
             if (error instanceof Error) {

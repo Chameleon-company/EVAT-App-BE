@@ -93,4 +93,37 @@ export default class PredictController {
             return res.status(500).json({ message: error.message });
         }
     }
+
+    /**
+       * Adds or updates the congestion level for a charger
+       * 
+       * @param req Request object containing the query parameter for an ID and congestion level
+       * @param res Response object used to send back the HTTP response
+       * @returns Returns the status code, a relevant message
+       * */
+    async postCongestionLevelsBatch(req: Request, res: Response): Promise<Response> {
+        try {
+            const levels = req.body.predictions;
+            for (let i = 0; i < levels.length; i++) {
+                if (typeof (levels[i].station_id) != "string") {
+                    return res.status(400).json({ message: "ID must be a string for " + i });
+                }
+                if ((levels[i].congestion_level == "low") || (levels[i].congestion_level == "medium") || (levels[i].congestion_level == "high")) {
+                    break;
+                } else {
+                    return res.status(400).json({ message: "Level must be 'low', 'medium', or 'high' for " + i });
+                }
+            }
+
+            const result = await this.predictService.postCongestionLevelsBatch(levels);
+            if (result == false) {
+                return res.status(500).json({ message: "Unknown error occurred" });
+            } else {
+                return res.status(201).json({ message: "Congestion level updated successfully" });
+            }
+
+        } catch (error: any) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
 }

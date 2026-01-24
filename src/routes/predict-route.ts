@@ -199,4 +199,62 @@ router.delete("/congestion", isAdminAuthenticated, (req, res) =>
   predictController.deleteCongestionLevel(req, res)
 );
 
+/**
+ * @swagger
+ * /api/predict/congestion/batch:
+ *   post:
+ *       tags:
+ *           - Predict
+ *       summary: Add multiple station congestion levels
+ *       description: "Uploads multiple stations congestions level by their ID's"
+ *       security:
+ *           - 
+ *               bearerAuth: []
+ *       requestBody:
+ *           required: true
+ *           content:
+ *               application/json:
+ *                   schema:
+ *                       type: object
+ *                       required:
+ *                           - stationIds
+ *                       properties:
+ *                           stationIds:
+ *                               type: object
+ *                               example:
+ *                                   predictions:
+ *                                       - 
+ *                                           station_id: 674f97ff3dc8e5d2ac00867a
+ *                                           congestion_level: medium
+ *                                       - 
+ *                                           station_id: 674f98013dc8e5d2ac00894a
+ *                                           congestion_level: medium
+ *                                       - 
+ *                                           station_id: 674f97ff3dc8e5d2ac008456
+ *                                           congestion_level: high
+ *                                   count: 3
+ *                                   timestamp: '2026-01-20T14:32:43.631369'
+ *       responses:
+ *           '200':
+ *               description: Congestion levels received successfully
+ *               content:
+ *                   application/json:
+ *                       schema:
+ *                           type: object
+ *                           properties:
+ *                               message:
+ *                                   type: string
+ *                                   example: Congestion levels updated successfully
+ *                               count:
+ *                                   type: int
+ *                                   example: 100
+ *           '400':
+ *               description: Bad request
+ *           '401':
+ *               description: Unauthorized
+ */
+router.post("/congestion/batch", isAdminAuthenticated, (req, res) => { // Have to use post as PUT does not have body
+  predictController.postCongestionLevelsBatch(req, res);
+});
+
 export default router;
