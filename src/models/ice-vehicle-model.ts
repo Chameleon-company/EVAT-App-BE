@@ -70,4 +70,3 @@ const IceVehicle = mongoose.model<IIceVehicle>(
 );
 
 export default IceVehicle;
-
