@@ -2,7 +2,6 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IIceVehicle extends Document {
   model_release_year?: number;
-  model_release_version?: string;
   make?: string;
   model?: string;
   variant?: string;
@@ -17,10 +16,16 @@ export interface IIceVehicle extends Document {
   driving_wheels_no?: number;
   fuel_type?: string;
   co2_emissions_combined?: number;
+  co2_emissions_urban?: number;
+  co2_emissions_extra_urban?: number;
   fuel_consumption_combined?: number;
+  fuel_consumption_urban?: number;
+  fuel_consumption_extra_urban?: number;
   energy_consumption_whkm?: number;
   electric_range_km?: number;
   air_pollution_standard?: string;
+  stationary_noise_data?: number;
+  test_speed?: number;
   is_current_model?: string;
   model_end_year?: number;
   fuel_life_cycle_co2?: number;
@@ -31,7 +36,6 @@ export interface IIceVehicle extends Document {
 const IceVehicleSchema: Schema = new Schema<IIceVehicle>(
   {
     model_release_year: { type: Number },
-    model_release_version: { type: String },
     make: { type: String },
     model: { type: String },
     variant: { type: String },
@@ -46,10 +50,16 @@ const IceVehicleSchema: Schema = new Schema<IIceVehicle>(
     driving_wheels_no: { type: Number },
     fuel_type: { type: String },
     co2_emissions_combined: { type: Number },
+    co2_emissions_urban: { type: Number },
+    co2_emissions_extra_urban: { type: Number },
     fuel_consumption_combined: { type: Number },
+    fuel_consumption_urban: { type: Number },
+    fuel_consumption_extra_urban: { type: Number },
     energy_consumption_whkm: { type: Number },
     electric_range_km: { type: Number },
     air_pollution_standard: { type: String },
+    stationary_noise_data: { type: Number },
+    test_speed: { type: Number },
     is_current_model: { type: String },
     model_end_year: { type: Number },
     fuel_life_cycle_co2: { type: Number },
@@ -57,16 +67,14 @@ const IceVehicleSchema: Schema = new Schema<IIceVehicle>(
     annual_fuel_cost: { type: Number },
   },
   {
-    timestamps: true,
-    versionKey: false,
-    strict: false,
+    timestamps: true, // Adds createdAt and updatedAt fields
+    versionKey: false, // Disables the __v field
   }
 );
 
 const IceVehicle = mongoose.model<IIceVehicle>(
   "IceVehicle",
   IceVehicleSchema,
-  "ice_vehicle"
+  "ice_vehicles"
 );
-
 export default IceVehicle;

@@ -21,6 +21,7 @@ import SupportRequestRoutes from "./src/routes/support-request-route";
 import UserRoutes from "./src/routes/user-route";
 import ProfileRoutes from "./src/routes/profile-route";
 import VehicleRoutes from "./src/routes/vehicle-route";
+import IceVehicleRoutes from "./src/routes/ice-vehicle-route";
 import StationRoutes from "./src/routes/station-route";
 import adminAuthRoutes from "./src/routes/admin-auth-route";
 import adminRoutes from "./src/routes/admin-route";
@@ -102,6 +103,7 @@ app.get("/api-docs/json", (req, res) => {
 app.use("/api/auth", UserRoutes);
 app.use("/api/profile", ProfileRoutes);
 app.use("/api/vehicle", VehicleRoutes);
+app.use("/api/ice-vehicle", IceVehicleRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin-auth', adminAuthRoutes);
 app.use('/api/chargers', StationRoutes); // As laid out in teams https://teams.microsoft.com/l/message/19:7206bda1ca594fa2a18709af5d9fb718@thread.v2/1743116771178?context=%7B%22contextType%22%3A%22chat%22%7D
