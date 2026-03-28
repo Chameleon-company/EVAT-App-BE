@@ -25,6 +25,7 @@ import StationRoutes from "./src/routes/station-route";
 import adminAuthRoutes from "./src/routes/admin-auth-route";
 import adminRoutes from "./src/routes/admin-route";
 import PredictRoutes from "./src/routes/predict-route";
+import EnvironmentalImpactRoutes from "./src/routes/environmental-impact-route";
 
 dotenv.config();
 
@@ -113,6 +114,7 @@ app.use("/api/bookings", BookingRoutes);
 app.use("/api/gamification", GamificationRoutes);
 app.use("/api/support-requests", SupportRequestRoutes);
 app.use("/api/predict", PredictRoutes);
+app.use("/api/environmental-impact", EnvironmentalImpactRoutes);
 
 
 // Serve React frontend
