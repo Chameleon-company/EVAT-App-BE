@@ -256,5 +256,103 @@ router.delete("/congestion", isAdminAuthenticated, (req, res) =>
 router.post("/congestion/batch", isAdminAuthenticated, (req, res) => { // Have to use post as PUT does not have body
   predictController.postCongestionLevelsBatch(req, res);
 });
+/**
+ * @swagger
+ * /api/predict/suitability/area/{sa2Name}:
+ *   get:
+ *     tags:
+ *       - Predict
+ *     summary: Get site suitability by SA2 area name
+ *     description: Returns the suitability score and profile for a specific SA2 area
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sa2Name
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Name of the SA2 area (e.g. Wallan)
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved site suitability
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get("/suitability/area/:sa2Name", authGuard(["user", "admin"]), (req, res) =>
+    predictController.getSiteSuitabilityByArea(req, res)
+);
+
+/**
+ * @swagger
+ * /api/predict/suitability/top:
+ *   get:
+ *     tags:
+ *       - Predict
+ *     summary: Get top N most suitable sites
+ *     description: Returns the top N SA2 areas ranked by suitability score
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: n
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Number of top sites to return (default 10)
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved top suitable sites
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get("/suitability/top", authGuard(["user", "admin"]), (req, res) =>
+    predictController.getTopSuitableSites(req, res)
+);
+
+/**
+ * @swagger
+ * /api/predict/suitability/coords:
+ *   get:
+ *     tags:
+ *       - Predict
+ *     summary: Get site suitability by coordinates
+ *     description: Returns the suitability score for the nearest SA2 area to the given coordinates
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: lat
+ *         schema:
+ *           type: number
+ *         required: true
+ *         description: Latitude of the location
+ *       - in: query
+ *         name: lng
+ *         schema:
+ *           type: number
+ *         required: true
+ *         description: Longitude of the location
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved site suitability by coordinates
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get("/suitability/coords", authGuard(["user", "admin"]), (req, res) =>
+    predictController.getSiteSuitabilityByCoords(req, res)
+);
 
 export default router;
