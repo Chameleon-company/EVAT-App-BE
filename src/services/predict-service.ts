@@ -110,5 +110,77 @@ export default class PredictService {
             }
         }
     }
+    /**
+ * Get suitability score for a specific SA2 area by name
+ * 
+ * @param sa2Name Name of the SA2 area
+ * @returns Suitability profile for the area
+ */
+async getSiteSuitabilityByArea(sa2Name: string): Promise<object> {
+    try {
+        const response = await fetch(
+            `http://localhost:5001/suitability/area/${sa2Name}`
+        );
+        if (!response.ok) {
+            throw new Error(`Site suitability service error: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error: any) {
+        if (error instanceof Error) {
+            throw new Error("Error retrieving site suitability: " + error.message);
+        } else {
+            throw new Error("An unknown error occurred while retrieving site suitability");
+        }
+    }
+}
+
+/**
+ * Get top N most suitable sites for EV charger installation
+ * 
+ * @param n Number of top sites to return (default 10)
+ * @returns List of top ranked SA2 areas by suitability score
+ */
+async getTopSuitableSites(n: number = 10): Promise<object> {
+    try {
+        const response = await fetch(
+            `http://localhost:5001/suitability/top?n=${n}`
+        );
+        if (!response.ok) {
+            throw new Error(`Site suitability service error: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error: any) {
+        if (error instanceof Error) {
+            throw new Error("Error retrieving top sites: " + error.message);
+        } else {
+            throw new Error("An unknown error occurred while retrieving top sites");
+        }
+    }
+}
+
+/**
+ * Get suitability score for the nearest SA2 area by coordinates
+ * 
+ * @param lat Latitude of the location
+ * @param lng Longitude of the location
+ * @returns Suitability profile of the nearest SA2 area
+ */
+async getSiteSuitabilityByCoords(lat: number, lng: number): Promise<object> {
+    try {
+        const response = await fetch(
+            `http://localhost:5001/suitability/coords?lat=${lat}&lng=${lng}`
+        );
+        if (!response.ok) {
+            throw new Error(`Site suitability service error: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error: any) {
+        if (error instanceof Error) {
+            throw new Error("Error retrieving site suitability by coords: " + error.message);
+        } else {
+            throw new Error("An unknown error occurred while retrieving site suitability by coords");
+        }
+    }
+}
 
 }

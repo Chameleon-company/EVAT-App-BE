@@ -126,4 +126,74 @@ export default class PredictController {
             return res.status(500).json({ message: error.message });
         }
     }
+
+    /**
+ * Gets the suitability score for a specific SA2 area by name
+ * 
+ * @param req Request object containing the SA2 area name as a path parameter
+ * @param res Response object used to send back the HTTP response
+ * @returns Returns the status code, a relevant message, and suitability data
+ */
+async getSiteSuitabilityByArea(req: Request, res: Response): Promise<Response> {
+    try {
+        const sa2Name = req.params.sa2Name;
+        if (typeof sa2Name === "string" && sa2Name.length >= 1) {
+            const result = await this.predictService.getSiteSuitabilityByArea(sa2Name);
+            return res.status(200).json({
+                message: "Successfully retrieved site suitability",
+                data: result
+            });
+        }
+        return res.status(400).json({ message: "SA2 area name must be a non-empty string" });
+    } catch (error: any) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+/**
+ * Gets the top N most suitable sites for EV charger installation
+ * 
+ * @param req Request object containing optional query parameter n
+ * @param res Response object used to send back the HTTP response
+ * @returns Returns the status code, a relevant message, and top sites data
+ */
+async getTopSuitableSites(req: Request, res: Response): Promise<Response> {
+    try {
+        const n = req.query.n ? parseInt(req.query.n as string) : 10;
+        if (isNaN(n) || n < 1) {
+            return res.status(400).json({ message: "n must be a positive integer" });
+        }
+        const result = await this.predictService.getTopSuitableSites(n);
+        return res.status(200).json({
+            message: "Successfully retrieved top suitable sites",
+            data: result
+        });
+    } catch (error: any) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+/**
+ * Gets the suitability score for the nearest SA2 area by coordinates
+ * 
+ * @param req Request object containing lat and lng as query parameters
+ * @param res Response object used to send back the HTTP response
+ * @returns Returns the status code, a relevant message, and suitability data
+ */
+async getSiteSuitabilityByCoords(req: Request, res: Response): Promise<Response> {
+    try {
+        const lat = parseFloat(req.query.lat as string);
+        const lng = parseFloat(req.query.lng as string);
+        if (isNaN(lat) || isNaN(lng)) {
+            return res.status(400).json({ message: "lat and lng must be valid numbers" });
+        }
+        const result = await this.predictService.getSiteSuitabilityByCoords(lat, lng);
+        return res.status(200).json({
+            message: "Successfully retrieved site suitability by coordinates",
+            data: result
+        });
+    } catch (error: any) {
+        return res.status(500).json({ message: error.message });
+    }
+}
 }
