@@ -5,6 +5,7 @@ import ProfileService from "../services/profile-service";
 import ProfileController from "../controllers/profile-controller";
 import VehicleService from "../services/vehicle-service";
 import ChargingStationService from "../services/station-service";
+import predictController from "../controllers/predict-controller";
 
 const router = Router();
 const userService = new UserService();

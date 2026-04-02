@@ -257,4 +257,73 @@ router.post("/congestion/batch", isAdminAuthenticated, (req, res) => { // Have t
   predictController.postCongestionLevelsBatch(req, res);
 });
 
+
+/**
+ * @swagger
+ * /api/predict/cost:
+ *   post:
+ *     tags:
+ *       - Predict
+ *     summary: EV vs ICE cost comparison
+ *     description: Uses the Python ML model to predict EV savings vs a petrol vehicle
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - distance_km
+ *               - electricity_price_per_kwh
+ *               - ice_eff_l_per_100km
+ *               - petrol_price_per_l
+ *             properties:
+ *               distance_km:
+ *                 type: number
+ *                 example: 40
+ *               electricity_price_per_kwh:
+ *                 type: number
+ *                 example: 0.30
+ *               ice_eff_l_per_100km:
+ *                 type: number
+ *                 example: 7.5
+ *               petrol_price_per_l:
+ *                 type: number
+ *                 example: 2.00
+ *     responses:
+ *       200:
+ *         description: Cost comparison calculated successfully
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal Server Error
+ */
+router.post("/cost", authGuard(["user", "admin"]), (req, res) => {
+    predictController.getCostComparison(req, res);
+});
+
+router.post("/cost/charts", authGuard(["user", "admin"]), (req, res) => {
+    predictController.getCostCharts(req, res);
+});
+
+router.get("/vehicles/ev", authGuard(["user", "admin"]), (req, res) => {
+    predictController.getEvVehicles(req, res);
+});
+
+router.get("/vehicles/ice", authGuard(["user", "admin"]), (req, res) => {
+    predictController.getIceVehicles(req, res);
+});
+
+router.post("/vehicles/ev/efficiency", authGuard(["user", "admin"]), (req, res) => {
+    predictController.getEvEfficiency(req, res);
+});
+
+router.post("/vehicles/ice/efficiency", authGuard(["user", "admin"]), (req, res) => {
+    predictController.getIceEfficiency(req, res);
+});
+
 export default router;
