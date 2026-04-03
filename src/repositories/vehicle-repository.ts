@@ -1,5 +1,6 @@
 import Vehicle, { IVehicle } from "../models/vehicle-model";
 import { FilterQuery } from "mongoose";
+import IceVehicle from "../models/ice-vehicle-model";
 
 class VehicleRepository {
 
@@ -20,7 +21,12 @@ class VehicleRepository {
    * @returns Returns all vehicles under a specific filter
    */
   async findAll(filter: FilterQuery<IVehicle> = {}): Promise<IVehicle[]> {
-    return await Vehicle.find(filter).exec();
+    // get all ev vehicles
+    const evs = await Vehicle.find(filter).exec();
+    // get all ice vehicles
+    const ices = await IceVehicle.find(filter).exec();
+    // combine and return both lists (for now we just return EVs, but this is where we would combine them if needed)
+    return [...evs, ...ices];
   }
 
   /**
