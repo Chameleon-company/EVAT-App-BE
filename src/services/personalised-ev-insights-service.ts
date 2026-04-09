@@ -1,43 +1,98 @@
-import PersonalisedEVInsightsRepository, {
-  PersonalisedEVInsightsPayload,
-} from "../repositories/personalised-ev-insights-repository";
+import axios from "axios";
+import PersonalisedEVInsightsRepository, {PersonalisedEVInsightsPayload,} from "../repositories/personalised-ev-insights-repository";
 import { IPersonalisedEVInsights } from "../models/personalisedEVInsightsModel";
 
 export default class PersonalisedEVInsightsService {
-  async submitInsights(
-    userId: string,
-    email: string,
-    payload: PersonalisedEVInsightsPayload
-  ): Promise<IPersonalisedEVInsights> {
-    try {
-      if (!userId) {
-        throw new Error("User ID is required");
-      }
+  async submitInsights(userId: string, email: string, payload: PersonalisedEVInsightsPayload): Promise<any> {
+  try {
+    if (!userId) throw new Error("User ID is required");
+    if (!email) throw new Error("Email is required");
 
-      if (!email) {
-        throw new Error("Email is required");
-      }
+    this.validatePayload(payload);
 
-      this.validatePayload(payload);
+    // Save to DB (existing)
+    const savedRecord = await PersonalisedEVInsightsRepository.createInsight(
+      userId,
+      email,
+      payload
+    );
 
-      const result = await PersonalisedEVInsightsRepository.createInsight(
-        userId,
-        email,
-        payload
-      );
+    // Calling Flask API
+    const flaskResponse = await axios.post("http://127.0.0.1:8000/predict", payload);
 
-      return result;
-    } catch (error: any) {
-      if (error instanceof Error) {
-        throw new Error(
-          "Error saving personalised EV insights: " + error.message
-        );
-      }
-      throw new Error(
-        "An unknown error occurred while saving personalised EV insights"
-      );
-    }
+    const cluster = flaskResponse.data.cluster;
+
+    // Cluster mapping
+    const clusterInsights: any = {
+      0: {
+        profileType: "High-Usage Fuel Spenders",
+        description:
+          "Drives long distances with poor fuel efficiency, leading to high fuel costs.",
+      },
+      1: {
+        profileType: "Regular Commuters",
+        description:
+          "Drives regularly with moderate efficiency and steady fuel spending.",
+      },
+      2: {
+        profileType: "Long-Distance Travellers",
+        description:
+          "Drives extensively and spends heavily on fuel despite good efficiency.",
+      },
+      3: {
+        profileType: "Low Usage Urban Drivers",
+        description:
+          "Drives short distances occasionally with minimal fuel costs.",
+      },
+    };
+
+    // Cluster averages
+    const clusterAverages: any = {
+      0: { weekly_km: 524.18, fuel_efficiency: 2.35, monthly_fuel_spend: 105.12 },
+      1: { weekly_km: 213.62, fuel_efficiency: 6.6, monthly_fuel_spend: 103.59 },
+      2: { weekly_km: 525.1, fuel_efficiency: 8.4, monthly_fuel_spend: 315.07 },
+      3: { weekly_km: 55.73, fuel_efficiency: 6.29, monthly_fuel_spend: 27.51 },
+    };
+
+    const insight = clusterInsights[cluster];
+    const averages = clusterAverages[cluster];
+
+    // Final response
+    const finalInsight = {
+      cluster,
+      profileType: insight?.profileType,
+      description: insight?.description,
+
+      userMetrics: {
+        weekly_km: payload.weekly_km,
+        fuel_efficiency: payload.fuel_efficiency,
+        monthly_fuel_spend: payload.monthly_fuel_spend,
+      },
+
+      similarDriverAverages: averages,
+
+      comparison: {
+        weekly_km_difference: Number(
+          (payload.weekly_km - averages.weekly_km).toFixed(2)
+        ),
+        fuel_efficiency_difference: Number(
+          (payload.fuel_efficiency - averages.fuel_efficiency).toFixed(2)
+        ),
+        monthly_fuel_spend_difference: Number(
+          (payload.monthly_fuel_spend - averages.monthly_fuel_spend).toFixed(2)
+        ),
+      },
+    };
+
+    return {
+      message: "Insight generated successfully",
+      savedRecord,
+      insight: finalInsight,
+    };
+  } catch (error: any) {
+    throw new Error("Error saving personalised EV insights: " + error.message);
   }
+}
 
   async getLatestInsightByUserId(
     userId: string
