@@ -17,7 +17,23 @@ export interface IPersonalisedEVInsights extends Document {
   budget: string;
   priorities: string;
   postcode: string;
+
   cluster: number | null;
+  profileType?: string;
+  description?: string;
+
+  similarDriverAverages?: {
+    weekly_km: number;
+    fuel_efficiency: number;
+    monthly_fuel_spend: number;
+  };
+
+  comparison?: {
+    weekly_km_difference: number;
+    fuel_efficiency_difference: number;
+    monthly_fuel_spend_difference: number;
+  };
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,85 +51,71 @@ const PersonalisedEVInsightsSchema: Schema = new Schema<IPersonalisedEVInsights>
       match: [/^\S+@\S+\.\S+$/, "Please enter a valid email address"],
       maxlength: [255, "Email cannot exceed 255 characters"],
     },
-
     weekly_km: {
       type: Number,
       required: [true, "Weekly km is required"],
       min: [0, "Weekly km cannot be negative"],
     },
-
     trip_length: {
       type: String,
       required: [true, "Trip length is required"],
       trim: true,
     },
-
     driving_frequency: {
       type: String,
       required: [true, "Driving frequency is required"],
       trim: true,
     },
-
     driving_type: {
       type: String,
       required: [true, "Driving type is required"],
       trim: true,
     },
-
     road_trips: {
       type: String,
       required: [true, "Road trips field is required"],
       trim: true,
     },
-
     car_ownership: {
       type: String,
       required: [true, "Car ownership is required"],
       trim: true,
     },
-
     fuel_efficiency: {
       type: Number,
       required: [true, "Fuel efficiency is required"],
       min: [0, "Fuel efficiency cannot be negative"],
     },
-
     monthly_fuel_spend: {
       type: Number,
       required: [true, "Monthly fuel spend is required"],
       min: [0, "Monthly fuel spend cannot be negative"],
     },
-
     home_charging: {
       type: String,
       required: [true, "Home charging is required"],
       trim: true,
     },
-
     solar_panels: {
       type: String,
       required: [true, "Solar panels field is required"],
       trim: true,
     },
-
     charging_preference: {
       type: String,
       required: [true, "Charging preference is required"],
       trim: true,
     },
-
     budget: {
       type: String,
       required: [true, "Budget is required"],
       trim: true,
     },
-
     priorities: {
       type: String,
       required: [true, "Priorities are required"],
       trim: true,
     },
-
     postcode: {
       type: String,
       required: [true, "Postcode is required"],
@@ -124,6 +126,26 @@ const PersonalisedEVInsightsSchema: Schema = new Schema<IPersonalisedEVInsights>
     cluster: {
       type: Number,
       default: null,
+    },
+    profileType: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    similarDriverAverages: {
+      weekly_km: { type: Number, default: 0 },
+      fuel_efficiency: { type: Number, default: 0 },
+      monthly_fuel_spend: { type: Number, default: 0 },
+    },
+    comparison: {
+      weekly_km_difference: { type: Number, default: 0 },
+      fuel_efficiency_difference: { type: Number, default: 0 },
+      monthly_fuel_spend_difference: { type: Number, default: 0 },
     },
   },
   {
@@ -140,3 +162,4 @@ const PersonalisedEVInsights = mongoose.model<IPersonalisedEVInsights>(
 );
 
 export default PersonalisedEVInsights;
+
