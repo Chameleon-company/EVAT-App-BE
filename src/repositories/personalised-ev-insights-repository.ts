@@ -19,6 +19,22 @@ export interface PersonalisedEVInsightsPayload {
   postcode: string;
 }
 
+interface ProcessedInsightData {
+  cluster: number;
+  profileType: string;
+  description: string;
+  similarDriverAverages: {
+    weekly_km: number;
+    fuel_efficiency: number;
+    monthly_fuel_spend: number;
+  };
+  comparison: {
+    weekly_km_difference: number;
+    fuel_efficiency_difference: number;
+    monthly_fuel_spend_difference: number;
+  };
+}
+
 export default class PersonalisedEVInsightsRepository {
   static async createInsight(
     userId: string,
@@ -42,6 +58,36 @@ export default class PersonalisedEVInsightsRepository {
       }
       throw new Error(
         "An unknown error occurred while saving personalised EV insight"
+      );
+    }
+  }
+
+  static async updateInsightWithResult(
+    insightId: string,
+    result: ProcessedInsightData
+  ): Promise<IPersonalisedEVInsights | null> {
+    try {
+      return await PersonalisedEVInsights.findByIdAndUpdate(
+        insightId,
+        {
+          $set: {
+            cluster: result.cluster,
+            profileType: result.profileType,
+            description: result.description,
+            similarDriverAverages: result.similarDriverAverages,
+            comparison: result.comparison,
+          },
+        },
+        { new: true }
+      ).exec();
+    } catch (error: any) {
+      if (error instanceof Error) {
+        throw new Error(
+          "Error updating personalised EV insight result: " + error.message
+        );
+      }
+      throw new Error(
+        "An unknown error occurred while updating personalised EV insight result"
       );
     }
   }
