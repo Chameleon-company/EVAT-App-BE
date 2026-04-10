@@ -17,17 +17,13 @@ export default class PersonalisedEVInsightsController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const savedInsight =
-        await this.personalisedEVInsightsService.submitInsights(
-          user?.id || "",
-          existingUser.email || "",
-          req.body
-        );
+      const result = await this.personalisedEVInsightsService.submitInsights(
+        user?.id || "",
+        existingUser.email || "",
+        req.body
+      );
 
-      return res.status(201).json({
-        message: "Personalised EV insights saved successfully",
-        data: savedInsight,
-      });
+      return res.status(201).json(result);
     } catch (error: any) {
       return res.status(400).json({ message: error.message });
     }

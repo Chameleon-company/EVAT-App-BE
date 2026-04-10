@@ -18,7 +18,7 @@ router.post("/", authGuard(["user", "admin"]), (req, res) =>
   personalisedEVInsightsController.submitInsights(req, res)
 );
 
-router.get("/me", authGuard(["user", "admin"]), (req, res) =>
+router.get("/latest", authGuard(["user", "admin"]), (req, res) =>
   personalisedEVInsightsController.getMyInsights(req, res)
 );
 
