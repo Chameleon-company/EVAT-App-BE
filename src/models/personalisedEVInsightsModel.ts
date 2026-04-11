@@ -28,10 +28,19 @@ export interface IPersonalisedEVInsights extends Document {
     monthly_fuel_spend: number;
   };
 
+  allDriverAverages?: {
+    weekly_km: number;
+    fuel_efficiency: number;
+    monthly_fuel_spend: number;
+  };
+
   comparison?: {
-    weekly_km_difference: number;
-    fuel_efficiency_difference: number;
-    monthly_fuel_spend_difference: number;
+    sim_weekly_km_difference: number;
+    sim_fuel_efficiency_difference: number;
+    sim_monthly_fuel_spend_difference: number;
+    all_weekly_km_difference: number;
+    all_fuel_efficiency_difference: number;
+    all_monthly_fuel_spend_difference: number;
   };
 
   createdAt: Date;
@@ -142,10 +151,18 @@ const PersonalisedEVInsightsSchema: Schema = new Schema<IPersonalisedEVInsights>
       fuel_efficiency: { type: Number, default: 0 },
       monthly_fuel_spend: { type: Number, default: 0 },
     },
+    allDriverAverages: {
+      weekly_km: { type: Number, default: 0 },
+      fuel_efficiency: { type: Number, default: 0 },
+      monthly_fuel_spend: { type: Number, default: 0 }      
+    },
     comparison: {
-      weekly_km_difference: { type: Number, default: 0 },
-      fuel_efficiency_difference: { type: Number, default: 0 },
-      monthly_fuel_spend_difference: { type: Number, default: 0 },
+      sim_weekly_km_difference: { type: Number, default: 0 },
+      sim_fuel_efficiency_difference: { type: Number, default: 0 },
+      sim_monthly_fuel_spend_difference: { type: Number, default: 0 },
+      all_weekly_km_difference: { type: Number, default: 0 },
+      all_fuel_efficiency_difference: { type: Number, default: 0 },
+      all_monthly_fuel_spend_difference: { type: Number, default: 0 },
     },
   },
   {

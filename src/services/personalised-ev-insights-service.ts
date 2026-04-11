@@ -113,7 +113,11 @@ export default class PersonalisedEVInsightsService {
       2: { weekly_km: 525.1, fuel_efficiency: 8.4, monthly_fuel_spend: 315.07 },
       3: { weekly_km: 55.73, fuel_efficiency: 6.29, monthly_fuel_spend: 27.51 },
     };
-    const allDrivers = {weekly_km: 460.66, fuel_efficiency: 5.91, monthly_fuel_spend: 137.82};
+    const allDrivers: {
+      weekly_km: number;
+      fuel_efficiency: number;
+      monthly_fuel_spend: number;
+    } = {weekly_km: 460.66, fuel_efficiency: 5.91, monthly_fuel_spend: 137.82};
 
     const insight = clusterInsights[cluster];
     const averages = clusterAverages[cluster];
@@ -129,14 +133,23 @@ export default class PersonalisedEVInsightsService {
       similarDriverAverages: averages,
       allDriverAverages: allDrivers,
       comparison: {
-        weekly_km_difference: Number(
+        sim_weekly_km_difference: Number(
           (payload.weekly_km - averages.weekly_km).toFixed(2)
         ),
-        fuel_efficiency_difference: Number(
+        sim_fuel_efficiency_difference: Number(
           (payload.fuel_efficiency - averages.fuel_efficiency).toFixed(2)
         ),
-        monthly_fuel_spend_difference: Number(
+        sim_monthly_fuel_spend_difference: Number(
           (payload.monthly_fuel_spend - averages.monthly_fuel_spend).toFixed(2)
+        ),
+        all_weekly_km_difference: Number(
+          (payload.weekly_km - allDrivers.weekly_km).toFixed(2)
+        ),
+        all_fuel_efficiency_difference: Number(
+          (payload.fuel_efficiency - allDrivers.fuel_efficiency).toFixed(2)
+        ),
+        all_monthly_fuel_spend_difference: Number(
+          (payload.monthly_fuel_spend - allDrivers.monthly_fuel_spend).toFixed(2)
         ),
       },
     };

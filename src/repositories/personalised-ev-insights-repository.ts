@@ -28,10 +28,18 @@ interface ProcessedInsightData {
     fuel_efficiency: number;
     monthly_fuel_spend: number;
   };
+  allDriverAverages: {
+    weekly_km: number;
+    fuel_efficiency: number;
+    monthly_fuel_spend: number;
+  }
   comparison: {
-    weekly_km_difference: number;
-    fuel_efficiency_difference: number;
-    monthly_fuel_spend_difference: number;
+    sim_weekly_km_difference: number;
+    sim_fuel_efficiency_difference: number;
+    sim_monthly_fuel_spend_difference: number;
+    all_weekly_km_difference: number;
+    all_fuel_efficiency_difference: number;
+    all_monthly_fuel_spend_difference: number;
   };
 }
 
@@ -75,6 +83,7 @@ export default class PersonalisedEVInsightsRepository {
             profileType: result.profileType,
             description: result.description,
             similarDriverAverages: result.similarDriverAverages,
+            allDriverAverages: result.allDriverAverages,
             comparison: result.comparison,
           },
         },
