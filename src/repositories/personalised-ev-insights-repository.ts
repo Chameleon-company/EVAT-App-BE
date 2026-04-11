@@ -23,6 +23,8 @@ interface ProcessedInsightData {
   cluster: number;
   profileType: string;
   description: string;
+  estimatedSavings: number;
+  savingsMessage: string;
   similarDriverAverages: {
     weekly_km: number;
     fuel_efficiency: number;
@@ -82,6 +84,8 @@ export default class PersonalisedEVInsightsRepository {
             cluster: result.cluster,
             profileType: result.profileType,
             description: result.description,
+            estimatedSavings: result.estimatedSavings,
+            savingsMessage: result.savingsMessage,
             similarDriverAverages: result.similarDriverAverages,
             allDriverAverages: result.allDriverAverages,
             comparison: result.comparison,

@@ -126,10 +126,64 @@ export default class PersonalisedEVInsightsService {
       throw new Error(`Unsupported cluster value: ${cluster}`);
     }
 
+    const monthlyKm = payload.weekly_km * 4;
+
+    let electricityCostPerKm = 0.07; // default = public
+
+    const solar = payload.solar_panels;
+    const charging = payload.charging_preference;
+
+    // Solar 
+    if (solar === "Yes") {
+      electricityCostPerKm = 0.02;
+    }
+
+    // Home charging
+    else if (charging === "Home") {
+      electricityCostPerKm = 0.04;
+    }
+
+    // Work 
+    else if (charging === "Work") {
+      electricityCostPerKm = 0.05;
+    }
+
+    // Public / No preference
+    else {
+      electricityCostPerKm = 0.07;
+    }
+
+    const estimatedEvCost = monthlyKm * electricityCostPerKm;
+
+    let estimatedSavings = 0;
+    let savingsMessage = "";
+
+    const ownership = payload.car_ownership;
+
+    if (ownership === "Yes - Electric") {
+      estimatedSavings = 0;
+      savingsMessage ="You already own an EV, so switching savings do not apply.";
+    } else if (ownership === "No - I don't own a car") {
+      estimatedSavings = 0;
+      savingsMessage =
+        "Savings cannot be estimated because you do not currently own a car.";
+    } else {
+      estimatedSavings = Number((payload.monthly_fuel_spend - estimatedEvCost).toFixed(2));
+
+      if (estimatedSavings > 0) {
+        savingsMessage = `You could save around $${estimatedSavings} per month by switching to an EV.`;
+      } else {
+        estimatedSavings = 0;
+        savingsMessage ="Based on your current driving pattern, switching savings appear limited.";
+      }
+    }
+
     return {
       cluster,
       profileType: insight.profileType,
       description: insight.description,
+      estimatedSavings,
+      savingsMessage,
       similarDriverAverages: averages,
       allDriverAverages: allDrivers,
       comparison: {

@@ -21,6 +21,8 @@ export interface IPersonalisedEVInsights extends Document {
   cluster: number | null;
   profileType?: string;
   description?: string;
+  estimatedSavings?: number;
+  savingsMessage?: string;
 
   similarDriverAverages?: {
     weekly_km: number;
@@ -142,6 +144,15 @@ const PersonalisedEVInsightsSchema: Schema = new Schema<IPersonalisedEVInsights>
       trim: true,
     },
     description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    estimatedSavings: {
+      type: Number,
+      default: 0,
+    },
+    savingsMessage: {
       type: String,
       default: "",
       trim: true,
