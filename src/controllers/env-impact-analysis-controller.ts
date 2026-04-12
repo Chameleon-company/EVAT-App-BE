@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import EnvImpactAnalysisService from "../services/env-impact-analysis-service";
 
 export default class EnvImpactAnalysisController {
@@ -22,9 +23,21 @@ export default class EnvImpactAnalysisController {
         });
       }
 
+      const evId = evVehicleId.trim();
+      const iceId = iceVehicleId.trim();
+
+      if (
+        !mongoose.Types.ObjectId.isValid(evId) ||
+        !mongoose.Types.ObjectId.isValid(iceId)
+      ) {
+        return res.status(400).json({
+          message: "Invalid evVehicleId or iceVehicleId",
+        });
+      }
+
       const result = await this.envImpactAnalysisService.getComparison(
-        evVehicleId.trim(),
-        iceVehicleId.trim()
+        evId,
+        iceId
       );
 
       return res.status(200).json({

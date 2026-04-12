@@ -61,7 +61,7 @@ const envImpactAnalysisController = new EnvImpactAnalysisController(
  *       200:
  *         description: Comparison retrieved successfully
  *       400:
- *         description: Bad request - missing or invalid parameters
+ *         description: Bad request - missing ids, non-string ids, or invalid MongoDB ObjectId format
  *       401:
  *         description: Unauthorized
  *       404:
