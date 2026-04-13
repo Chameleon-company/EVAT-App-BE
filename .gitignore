@@ -3,3 +3,5 @@
 /.vscode
 /auth
 *.js
+__pycache__/
+*.pyc
