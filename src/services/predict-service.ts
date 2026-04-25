@@ -1,6 +1,7 @@
 import PredictRepository from "../repositories/predict-repository";
 import Congestion, { ICongestion } from "../models/congestion-model";
 import mongoose from "mongoose";
+import fetch from "node-fetch";
 
 
 export default class PredictService {
@@ -110,5 +111,141 @@ export default class PredictService {
             }
         }
     }
+
+
+     /**
+ * Calls the Python ML microservice to calculate EV vs ICE cost comparison
+ *
+ * @param distance_km Trip distance in kilometres
+ * @param electricity_price_per_kwh Electricity rate in $/kWh
+ * @param ice_eff_l_per_100km ICE fuel efficiency in L/100km
+ * @param petrol_price_per_l Petrol price in $/L
+ * @returns Predicted savings, costs, emissions from the ML model
+ */
+async getCostComparison(
+    distance_km: number,
+    electricity_price_per_kwh: number,
+    ice_eff_l_per_100km: number,
+    petrol_price_per_l: number,
+    ev_make?: string,
+    ev_model?: string,
+    ev_variant?: string,
+    ice_make?: string,
+    ice_model?: string,
+    ice_variant?: string,
+): Promise<any> {
+    try {
+        const response = await fetch("http://localhost:5000/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                distance_km,
+                electricity_price_per_kwh,
+                petrol_price_per_l,
+                ev_make,
+                ev_model,
+                ev_variant,
+                ice_make,
+                ice_model,
+                ice_variant,
+            }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json() as any;
+            throw new Error(error.detail || `ML service error: ${response.status}`);
+        }
+
+        return await response.json();
+
+    } catch (error: any) {
+        if (error instanceof Error) {
+            throw new Error("Error calling ML service: " + error.message);
+        } else {
+            throw new Error("Unknown error calling ML service");
+        }
+    }
+}
+async getCostCharts(
+    distance_km: number,
+    electricity_price_per_kwh: number,
+    ice_eff_l_per_100km: number,
+    petrol_price_per_l: number
+): Promise<any> {
+    try {
+        const response = await fetch("http://localhost:5000/charts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                distance_km,
+                electricity_price_per_kwh,
+                ice_eff_l_per_100km,
+                petrol_price_per_l,
+            }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json() as any;
+            throw new Error(error.detail || `ML service error: ${response.status}`);
+        }
+
+        return await response.json();
+
+    } catch (error: any) {
+        if (error instanceof Error) {
+            throw new Error("Error fetching chart data: " + error.message);
+        } else {
+            throw new Error("Unknown error fetching chart data");
+        }
+    }
+}
+
+async getEvVehicles(): Promise<any> {
+    try {
+        const response = await fetch("http://localhost:5000/vehicles/ev");
+        if (!response.ok) throw new Error(`ML service error: ${response.status}`);
+        return await response.json();
+    } catch (error: any) {
+        throw new Error("Error fetching EV vehicles: " + error.message);
+    }
+}
+
+async getIceVehicles(): Promise<any> {
+    try {
+        const response = await fetch("http://localhost:5000/vehicles/ice");
+        if (!response.ok) throw new Error(`ML service error: ${response.status}`);
+        return await response.json();
+    } catch (error: any) {
+        throw new Error("Error fetching ICE vehicles: " + error.message);
+    }
+}
+
+async getEvEfficiency(make: string, model: string, variant?: string): Promise<any> {
+    try {
+        const response = await fetch("http://localhost:5000/vehicles/ev/efficiency", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ make, model, variant }),
+        });
+        if (!response.ok) throw new Error(`ML service error: ${response.status}`);
+        return await response.json();
+    } catch (error: any) {
+        throw new Error("Error fetching EV efficiency: " + error.message);
+    }
+}
+
+async getIceEfficiency(make: string, model: string, variant?: string): Promise<any> {
+    try {
+        const response = await fetch("http://localhost:5000/vehicles/ice/efficiency", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ make, model, variant }),
+        });
+        if (!response.ok) throw new Error(`ML service error: ${response.status}`);
+        return await response.json();
+    } catch (error: any) {
+        throw new Error("Error fetching ICE efficiency: " + error.message);
+    }
+}
 
 }
