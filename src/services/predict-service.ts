@@ -248,4 +248,41 @@ async getIceEfficiency(make: string, model: string, variant?: string): Promise<a
     }
 }
 
+async getDemandForecast(postcode: string, date: string): Promise<any> {
+    try {
+        const response = await fetch("http://localhost:5001/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ postcode, date }),
+        });
+        if (!response.ok) {
+            const error = await response.json() as any;
+            throw new Error(error.detail || `ML service error: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error: any) {
+        throw new Error("Error calling demand forecast ML service: " + error.message);
+    }
+}
+
+async getDemandPostcodes(): Promise<any> {
+    try {
+        const response = await fetch("http://localhost:5001/postcodes");
+        if (!response.ok) throw new Error(`ML service error: ${response.status}`);
+        return await response.json();
+    } catch (error: any) {
+        throw new Error("Error fetching demand postcodes: " + error.message);
+    }
+}
+
+async getDemandCoords(postcode: string): Promise<any> {
+    try {
+        const response = await fetch(`http://localhost:5001/coords/${postcode}`);
+        if (!response.ok) throw new Error(`ML service error: ${response.status}`);
+        return await response.json();
+    } catch (error: any) {
+        throw new Error("Error fetching postcode coordinates: " + error.message);
+    }
+}
+
 }

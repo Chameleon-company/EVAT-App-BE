@@ -211,4 +211,39 @@ export default class PredictController {
             return res.status(500).json({ message: error.message });
         }
     }
+
+    async getDemandForecast(req: Request, res: Response): Promise<Response> {
+    try {
+        const { postcode, date } = req.body;
+        if (!postcode || !date) {
+            return res.status(400).json({ message: "Missing required fields: postcode, date" });
+        }
+        const result = await this.predictService.getDemandForecast(postcode, date);
+        return res.status(200).json(result);
+    } catch (error: any) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+async getDemandPostcodes(req: Request, res: Response): Promise<Response> {
+    try {
+        const result = await this.predictService.getDemandPostcodes();
+        return res.status(200).json(result);
+    } catch (error: any) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+async getDemandCoords(req: Request, res: Response): Promise<Response> {
+    try {
+        const { postcode } = req.params;
+        if (!postcode) {
+            return res.status(400).json({ message: "Postcode is required" });
+        }
+        const result = await this.predictService.getDemandCoords(postcode);
+        return res.status(200).json(result);
+    } catch (error: any) {
+        return res.status(500).json({ message: error.message });
+    }
+}
 }
