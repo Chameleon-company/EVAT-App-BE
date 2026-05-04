@@ -3,15 +3,9 @@ from shapely import wkt
 from shapely.geometry import Point
 import geopandas as gpd
 import joblib
-from flask import Flask, request, jsonify
-
-try:
-    from flask_cors import CORS
-    CORS_AVAILABLE = True
-except ImportError:
-    CORS_AVAILABLE = False
-    print("Warning: flask-cors not installed. CORS support disabled.")
-    print("Install with: pip install flask-cors")
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 model = joblib.load("ev_model.pkl")
 
@@ -96,62 +90,45 @@ def get_weather_features_from_coords(lat: float, lon: float) -> tuple[float, flo
     total_prcp = float(weather_gdf.loc[nearest_idx, "total_prcp"])
     return avg_temp, total_prcp
 
-app = Flask(__name__)
-if CORS_AVAILABLE:
-    CORS(app)
-else:
-    @app.after_request
-    def after_request(response):
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-        return response
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.route("/", methods=["GET"])
+class PredictRequest(BaseModel):
+    year: int
+    start_lat: float
+    start_lon: float
+
+@app.get("/")
 def root():
-    return jsonify({"message": "EV model API is running"})
+    return {"message": "EV model API is running"}
 
-@app.route("/predict", methods=["POST"])
-def predict():
+@app.post("/predict")
+def predict(data: PredictRequest):
     try:
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({"error": "Request body is required"}), 400
-        
-        year = data.get("year")
-        start_lat = data.get("start_lat")
-        start_lon = data.get("start_lon")
-        
-        if year is None or start_lat is None or start_lon is None:
-            return jsonify({
-                "error": "Missing required fields: year, start_lat, start_lon"
-            }), 400
-        
-        year = int(year)
-        start_lat = float(start_lat)
-        start_lon = float(start_lon)
-        
-        shape_length = get_shape_length_from_coords(start_lat, start_lon)
-        dist_to_nearest_ev_m, ev_within_500m = get_ev_features_from_coords(
-            start_lat, start_lon
-        )
-        avg_temp, total_prcp = get_weather_features_from_coords(
-            start_lat, start_lon
-        )
+        year = data.year
+        start_lat = data.start_lat
+        start_lon = data.start_lon
 
-        feature_data = pd.DataFrame([[
-            year,
-            shape_length,
-            dist_to_nearest_ev_m,
-            ev_within_500m,
-            avg_temp,
-            total_prcp,
-        ]], columns=FEATURES)
+        shape_length = get_shape_length_from_coords(start_lat, start_lon)
+        dist_to_nearest_ev_m, ev_within_500m = get_ev_features_from_coords(start_lat, start_lon)
+        avg_temp, total_prcp = get_weather_features_from_coords(start_lat, start_lon)
+
+        feature_data = pd.DataFrame([[year, shape_length,
+                                     dist_to_nearest_ev_m,
+                                     ev_within_500m,
+                                     avg_temp,
+                                     total_prcp]], columns=FEATURES)
 
         pred = model.predict(feature_data)[0]
 
-        return jsonify({
+        return {
+            "prediction": float(pred),
             "year": year,
             "start_lat": start_lat,
             "start_lon": start_lon,
@@ -159,18 +136,10 @@ def predict():
             "ev_within_500m": ev_within_500m,
             "avg_temp": avg_temp,
             "total_prcp": total_prcp,
-            "used_SHAPE_Length": shape_length,
-            "prediction": float(pred),
-        })
-    
-    except ValueError as e:
-        return jsonify({"error": f"Invalid input: {str(e)}"}), 400
-    except Exception as e:
-        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+            "used_SHAPE_Length": shape_length
+        }
 
-if __name__ == "__main__":
-    print("=" * 50)
-    print("Starting EV Traffic & Weather Model API...")
-    print("Server will be available at http://localhost:5001")
-    print("=" * 50)
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    except ValueError as e:
+        return {"error": f"Invalid input: {str(e)}"}, 400
+    except Exception as e:
+        return {"error": str(e)}, 500

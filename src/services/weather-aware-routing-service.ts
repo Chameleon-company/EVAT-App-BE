@@ -1,7 +1,5 @@
 import axios from "axios";
 
-const PYTHON_API = process.env.PYTHON_API_URL;
-
 export interface WeatherAwareRoutingPayload {
   year: number;
   start_lat: number;
@@ -22,7 +20,7 @@ export default class WeatherAwareRoutingService {
     payload: WeatherAwareRoutingPayload
   ): Promise<WeatherAwareRoutingResult> {
     try {
-      const response = await axios.post(`${PYTHON_API}/predict`, payload);
+      const response = await axios.post("http://127.0.0.1:5002/predict", payload);
       const data = response.data;
 
       return {
