@@ -108,6 +108,7 @@ export default class ProfileService {
           user_id: userId,
           user_car_model: null,
           favourite_stations: [],
+          avatarURL: null,
         };
       } else return existingTracking;
     } catch (e) {

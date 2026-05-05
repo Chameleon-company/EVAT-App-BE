@@ -47,6 +47,10 @@ export default class ProfileController {
         response.favourite_stations = existingStations;
       }
 
+      if (existingProfile.avatarURL) {
+        response.avatarURL = existingProfile.avatarURL;
+      }
+
       return res.status(201).json({
         message: "success",
         data: response,
