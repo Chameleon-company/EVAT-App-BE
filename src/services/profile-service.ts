@@ -115,4 +115,43 @@ export default class ProfileService {
       throw e;
     }
   }
+
+  /**
+   * Retrieves the user's avatar
+   * If it doesn't exist, return a default object with empty values
+   * 
+   * @param userId The ID of the user | user_id (String)
+   * @returns The user's avatar url
+   */
+  async getAvatar(userId: string) {
+    try {
+      const profile = await ProfileRepository.findByUserId(userId);
+      if (!profile) return null;
+      else return profile.avatarURL;
+    } catch (e) {
+      throw e;
+    }
+  } 
+
+  /**
+   * Changes the user's avatar
+   * If it doesn't exist, return a default object with empty values
+   * 
+   * @param userId The ID of the user
+   * @param avatarURL The new avatar URL
+   * @returns The user profile with the change
+   */
+  async updateAvatar(userId: string, avatarURL: string) {
+    try {
+      const profile = await ProfileRepository.findByUserId(userId);
+      if (!profile) return null;
+      else {
+        profile.avatarURL = avatarURL;
+        await profile.save();
+        return profile;
+      }
+    } catch (e) {
+      throw e;
+    }
+  }
 }

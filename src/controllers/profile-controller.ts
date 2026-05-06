@@ -200,4 +200,67 @@ export default class ProfileController {
     }
   }
 
+  /**
+   * Function to get a users avatar
+   * 
+   * @param req Request object containing the user ID 
+   * @param res Response object used to send back the HTTP response
+   * @returns Returns the status code, a relevant message, and the data if the request was successful
+   */
+  async getUserAvatar(req: Request, res: Response): Promise<Response> {
+  try {
+    const userId = req.user.id;
+    const profile = await this.profileService.getUserProfile(userId);
+
+    if (!profile) {
+      return res.status(404).json({ message: "User profile not found" });
+    }
+
+    const avatarUrl = profile.avatarURL;
+    if (!avatarUrl) {
+      return res.status(404).json({ message: "User avatar not found" });
+    }
+
+    return res.status(200).json({
+      message: "Avatar retrieved successfully",
+      data: { avatarURL: avatarUrl }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+}
+
+  /**
+   * Function to update the profiles image/avatar
+   * 
+   * @param req Request object containing the user ID and avatar URL
+   * @param res Response object used to send back the HTTP response
+   * @returns Returns the status code, a relevant message, and the data if the request was successful
+   */
+  async updateAvatar(req: Request, res: Response): Promise<Response> {
+  try {
+    const userID = req.user.id; // Assuming auth middleware attaches user info to req.user
+    const { avatarURL } = req.body;
+
+    if (!avatarURL) {
+      return res.status(400).json({ message: "avatarURL is required" });
+    }
+
+    const updatedProfile = await this.profileService.updateAvatar(userID, avatarURL);
+
+    if (!updatedProfile) {
+      return res.status(404).json({ message: "User profile not found" });
+    }
+
+    return res.status(200).json({
+      message: "Avatar updated successfully",
+      data: updatedProfile
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+}
+
 }

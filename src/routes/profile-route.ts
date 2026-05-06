@@ -306,4 +306,90 @@ router.get("/username/:userID",
   (req, res) => profileController.getUsernameByID(req, res)
 );
 
+/**
+ * @swagger
+ * /api/profile/avatar:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Get user's profile avatar
+ *     description: Retrieve the avatarURL of the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved avatar
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     avatarURL:
+ *                       type: string
+ *                       example: "defaultProfilePictures/default-blue.png"
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User profile not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/avatar",
+  authGuard(["user", "admin"]),
+  (req, res) => profileController.getUserAvatar(req, res)
+);
+
+/**
+ * @swagger
+ * /api/profile/avatar:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: Update user's profile avatar
+ *     description: Change the avatarURL of the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               avatarURL:
+ *                 type: string
+ *                 example: "https://example.com/new-avatar.png"
+ *     responses:
+ *       200:
+ *         description: Avatar updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Avatar updated successfully"
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User profile not found
+ *       500:
+ *         description: Server error
+ */
+router.post("/avatar", 
+  authGuard(["user", "admin"]), 
+  (req, res) => profileController.updateAvatar(req, res)
+);
+
 export default router;
