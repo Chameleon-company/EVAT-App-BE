@@ -5,6 +5,7 @@ import ProfileService from "../services/profile-service";
 import ProfileController from "../controllers/profile-controller";
 import VehicleService from "../services/vehicle-service";
 import ChargingStationService from "../services/station-service";
+import { UserStatsService }  from "../services/user-stats-service";
 import predictController from "../controllers/predict-controller";
 
 const router = Router();
@@ -12,11 +13,13 @@ const userService = new UserService();
 const profileService = new ProfileService();
 const vehicleService = new VehicleService();
 const stationService = new ChargingStationService();
+const userStatsService = new UserStatsService();
 const profileController = new ProfileController(
   userService,
   profileService,
   vehicleService,
-  stationService
+  stationService,
+  userStatsService
 );
 
 /**
