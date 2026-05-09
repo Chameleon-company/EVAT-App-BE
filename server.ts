@@ -121,13 +121,10 @@ app.use("/api/gamification", GamificationRoutes);
 app.use("/api/support-requests", SupportRequestRoutes);
 app.use("/api/predict", PredictRoutes);
 app.use("/api/env-impact-analysis", EnvImpactAnalysisRoutes);
-<<<<<<< HEAD
 app.use("/api/voice", VoiceRoutes);
 app.use("/api/user-stats", userStatsRoutes);
-=======
 app.use("/api/personalised-ev-insights", personalisedEVInsightsRoutes);
 app.use("/weather-aware-routing", weatherAwareRoutingRoutes);
->>>>>>> jeremy-be/PEVI_and_WAR
 
 
 // Serve React frontend
