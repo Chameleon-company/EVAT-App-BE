@@ -8,6 +8,7 @@ export class UserItemResponse {
     this.lastName = user.lastName ?? "";
     this.mobile = user.mobile;
     this.role = user.role;
+    this.createdAt = user.createdAt;
   }
 
   id: string;
@@ -16,4 +17,5 @@ export class UserItemResponse {
   lastName: string;
   mobile?: string;
   role: string;
+  createdAt: Date;
 }

@@ -6,6 +6,7 @@ export interface IProfile extends Document {
   favourite_stations: Array<string>;
   createdAt: Date;
   updatedAt: Date;
+  avatarURL?: string;
 }
 
 const ProfileSchema: Schema = new Schema<IProfile>(
@@ -17,6 +18,10 @@ const ProfileSchema: Schema = new Schema<IProfile>(
     },
     user_car_model: { type: String },
     favourite_stations: { type: [] },
+    avatarURL: {
+      type: String, 
+      default: "defaultProfilePictures/default-white.png"
+    }
   },
   {
     timestamps: true, // Automatically add createdAt and updatedAt fields
