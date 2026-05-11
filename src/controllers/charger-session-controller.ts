@@ -3,10 +3,14 @@
 // Import express and ChargerSessionService
 import { Request, Response } from "express";
 import ChargerSessionService from '../services/charger-session-service';
+import { UserStatsService } from '../services/user-stats-service';
 
 // ChargerSessionController Class
 export default class ChargerSessionController {
-  constructor(private readonly sessionService: ChargerSessionService) {}
+  constructor(
+    private readonly sessionService: ChargerSessionService,
+    private readonly userStatsService: UserStatsService
+  ) {}
 
   // /**
   //  * Handle the request to get all charging sessions with optional filtering
@@ -72,10 +76,34 @@ export default class ChargerSessionController {
     try {
       const { sessionId } = req.params;
       const session = await this.sessionService.endSession(sessionId);
-      
+
+      // Update User stats and Achievements
+      let newAchievements: any[] = [];
+      if (session?.userId && session.endTime && session.startTime) {
+        const durationSeconds = 
+          Math.floor((new Date(session.endTime).getTime() - new Date(session.startTime).getTime()) / 1000);
+
+        const statsResult = await this.userStatsService.recordChargingSession(
+          session.userId.toString(), 
+          {
+            chargeTimeSeconds: (durationSeconds || 0)* 1000,  // convert to Wh
+            whCharged: session.energyDelivered || 0,
+            // Not available in model yet
+            // This can be calculated if there is a profile vehicle assigned and the average Wh/km is known.
+            metresTravelled: 0,   
+            chargingCostCents: (session.cost || 0) * 100,     // convert to cents
+          }
+        );
+
+        newAchievements = statsResult.newAchievements;
+      }
+
       return res.status(200).json({
         message: `Charging session ID ${session._id} ended.`,
-        data: session,
+        data: {
+          session,
+          newAchievements // for front end to use for unlocked achievements
+        },
       });
     } catch (error: any) {
       return this.handleError(error, res);
