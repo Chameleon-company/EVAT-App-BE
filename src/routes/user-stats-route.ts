@@ -74,6 +74,10 @@ router.post("/initialize", authGuard(["user", "admin"]), (req, res) =>
     userStatController.initializeStats(req, res)
 );
 
+// ===============================================================================================
+//                          DEVELOPER ONLY ROUTES (for testing)
+// ===============================================================================================
+
 /**
  * @swagger
  * /api/user-stats/reset:
@@ -95,6 +99,104 @@ router.post("/initialize", authGuard(["user", "admin"]), (req, res) =>
 if (process.env.NODE_ENV !== "production") {
     router.post("/reset", authGuard(["user", "admin"]), (req, res) =>
         userStatController.resetAllStats(req, res)
+    );
+}
+
+/**
+ * @swagger
+ * /api/user-stats/reset-counters:
+ *   post:
+ *     tags:
+ *       - User Stats
+ *     summary: Reset all user stat counters (Development only)
+ *     description: Resets all counters to 0. Intended for testing and development only.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All counters reset successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+if (process.env.NODE_ENV !== "production") {
+    router.post("/reset-counters", authGuard(["user", "admin"]), (req, res) =>
+        userStatController.resetCounters(req, res)
+    );
+}
+
+/**
+ * @swagger
+ * /api/user-stats/reset-flags:
+ *   post:
+ *     tags:
+ *       - User Stats
+ *     summary: Reset all user stat flags (Development only)
+ *     description: Resets all flags to false. Intended for testing and development only.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All flags reset successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+if (process.env.NODE_ENV !== "production") {
+    router.post("/reset-flags", authGuard(["user", "admin"]), (req, res) =>
+        userStatController.resetFlags(req, res)
+    );
+}
+
+
+/**
+ * @swagger
+ * /api/user-stats/test/increment:
+ *   post:
+ *     tags:
+ *       - User Stats
+ *     summary: Adds a value to a user stat counter (Development only)
+ *     description: Adds a given value to the user stat counter with the matching name. Intended for testing and development only.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Counter successfully changed
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+if (process.env.NODE_ENV !== "production") {
+    router.post("/test/increment", authGuard(["user", "admin"]), (req, res) =>
+        userStatController.testIncrementCounter(req, res)
+    );
+}
+
+
+/**
+ * @swagger
+ * /api/user-stats/test/set-flag:
+ *   post:
+ *     tags:
+ *       - User Stats
+ *     summary: Sets a user stat flag to true (Development only)
+ *     description: Sets user stat flag with the matching name to true. Intended for testing and development only.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Flags successfully changed
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+if (process.env.NODE_ENV !== "production") {
+    router.post("/test/set-flag", authGuard(["user", "admin"]), (req, res) =>
+        userStatController.testSetFlag(req, res)
     );
 }
 

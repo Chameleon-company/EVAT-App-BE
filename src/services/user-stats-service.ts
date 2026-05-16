@@ -1,6 +1,6 @@
 import userStatsRepository from "../repositories/user-stats-repository";
 import achievementService from "../services/achievement-service";
-import { IUserStats } from "../models/user-stats-model";
+import { IUserStats, ICounters, IFlags } from "../models/user-stats-model";
 
 // This service handles all the achievement system items
 // It is the place to put calculations and derived values (like "1 year since joining")
@@ -244,17 +244,37 @@ export class UserStatsService {
     return { stats: updatedStats, newAchievements };
   }
 
-  // TESTING HELPERS - resets stats
+  // TESTING HELPERS - direct access to user stats and resets stats
+  async incrementCounters(userId: string, updates: Partial<ICounters>) {
+    const updatedStats = await userStatsRepository.incrementCounters(userId, updates);
+    
+    if (updatedStats) {
+      await achievementService.evaluateAndAwardAchievements(userId, Object.keys(updates));
+    }
+    
+    return updatedStats;
+  }
+
+  async setFlags(userId: string, updates: Partial<IFlags>) {
+    const updatedStats = await userStatsRepository.setFlags(userId, updates);
+    
+    if (updatedStats) {
+      await achievementService.evaluateAndAwardAchievements(userId, Object.keys(updates));
+    }
+    
+    return updatedStats;
+  }
+
   async resetAllStats(userId: string): Promise<IUserStats | null> {
     return userStatsRepository.resetAll(userId);
   }
 
-  async resetCounter(userId: string, counterName: keyof IUserStats["counters"]) {
-    return userStatsRepository.resetCounter(userId, counterName);
+  async resetCounters(userId: string) {
+    return userStatsRepository.resetCounters(userId);
   }
 
-  async resetFlag(userId: string, flagName: keyof IUserStats["flags"]) {
-    return userStatsRepository.resetFlag(userId, flagName);
+  async resetFlags(userId: string) {
+    return userStatsRepository.resetFlags(userId);
   }
 }
 

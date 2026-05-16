@@ -148,12 +148,28 @@ export class UserStatsRepository {
    * @param counterName String: name of the counter to be reset
    * @returns UserStats: Returns the updated users stats
    */
-  async resetCounter(userId: string, counterName: keyof ICounters) : Promise<IUserStats | null> {
+  async resetCounters(userId: string) : Promise<IUserStats | null> {
     return UserStats.findOneAndUpdate(
       { userId },
       {
         $set: {
-          [`counters.${counterName}`]: 0,
+          counters: {
+            totalChargeTimeSeconds: 0,
+            totalWhCharged: 0,
+            totalMetresTravelled: 0,
+            totalCO2KgAvoided: 0,
+            totalBookings: 0,
+            totalChargersUsed: 0,
+            totalChargingSessions: 0,
+            totalPetrolSavingsCents: 0,
+            totalChargingCostsCents: 0,
+            totalReviewsWritten: 0,
+            totalRatingsGiven: 0,
+            totalFaultReports: 0,
+            yearsJoined: 0,
+            totalLoginDays: 0,
+            consecutiveLoginDays: 0,
+          },
           lastUpdated: new Date(),
         },
       },
@@ -169,12 +185,28 @@ export class UserStatsRepository {
    * @param value Bool: the value the flag will be set to. Sets to false if nothing is provided.
    * @returns UserStats: Returns the updated users stats
    */
-  async resetFlag(userId: string, flagName: keyof IFlags): Promise<IUserStats | null> {
+  async resetFlags(userId: string): Promise<IUserStats | null> {
     return UserStats.findOneAndUpdate(
       { userId },
       {
         $set: {
-          [`flags.${flagName}`]: false,
+          flags: {
+            setProfilePic: false,
+            useSmartFilter: false,
+            useChatBot: false,
+            setProfileVehicle: false,
+            saveFavouriteCharge: false,
+            postReview: false,
+            giveRating: false,
+            useTeslaNetwork: false,
+            useEvieNetwork: false,
+            christmasDayCharge: false,
+            earthDayCharge: false,
+            winterSolsticeCharge: false,
+            summerSolsticeCharge: false,
+            autumalEquinoxCharge: false,
+            springEquinoxCharge: false,
+          },
           lastUpdated: new Date(),
         },
       },
