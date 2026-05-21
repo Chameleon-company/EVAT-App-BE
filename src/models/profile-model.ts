@@ -20,7 +20,7 @@ const ProfileSchema: Schema = new Schema<IProfile>(
     favourite_stations: { type: [] },
     avatarURL: {
       type: String, 
-      default: "../assets/profileImage.png"
+      default: "defaultProfilePictures/default-white.png"
     }
   },
   {

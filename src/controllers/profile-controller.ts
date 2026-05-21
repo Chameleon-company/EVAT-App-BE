@@ -3,6 +3,7 @@ import ProfileService from "../services/profile-service";
 import VehicleService from "../services/vehicle-service";
 import UserService from "../services/user-service";
 import ChargingStationService from "../services/station-service";
+import { UserStatsService }  from "../services/user-stats-service";
 import { UserProfileResponse } from "../dtos/user-profile-response";
 
 export default class ProfileController {
@@ -10,7 +11,8 @@ export default class ProfileController {
     private readonly userService: UserService,
     private readonly profileService: ProfileService,
     private readonly vehicleService: VehicleService,
-    private readonly stationService: ChargingStationService
+    private readonly stationService: ChargingStationService,
+    private readonly userStatsService: UserStatsService
   ) {}
 
   /**
@@ -26,24 +28,15 @@ export default class ProfileController {
     try {
       const response = new UserProfileResponse(user?.id);
 
-      const existingProfile = await this.profileService.getUserProfile(
-        user?.id
-      );
+      const existingProfile = await this.profileService.getUserProfile(user?.id);
 
       if (existingProfile.user_car_model) {
-        const existingVehicle = await this.vehicleService.getVehicleById(
-          existingProfile.user_car_model
-        );
+        const existingVehicle = await this.vehicleService.getVehicleById(existingProfile.user_car_model);
         response.user_car_model = existingVehicle;
       }
 
-      if (
-        existingProfile.favourite_stations &&
-        existingProfile.favourite_stations.length > 0
-      ) {
-        const existingStations = await this.stationService.getStationsWithIdIn(
-          existingProfile.favourite_stations
-        );
+      if (existingProfile.favourite_stations && existingProfile.favourite_stations.length > 0 ) {
+        const existingStations = await this.stationService.getStationsWithIdIn(existingProfile.favourite_stations);
         response.favourite_stations = existingStations;
       }
 
@@ -77,21 +70,26 @@ export default class ProfileController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const existingVehicle = await this.vehicleService.getVehicleById(
-        vehicleId
-      );
+      const existingVehicle = await this.vehicleService.getVehicleById(vehicleId);
       if (!existingVehicle) {
         return res.status(404).json({ message: "Vehicle not found" });
       }
 
+      // Update the profile vehicle
       const updatedProfile = await this.profileService.updateUserVehicleModel(
         user?.id || "",
         vehicleId
       );
 
+      // Trigger stats + achievements
+      const statsResult = await this.userStatsService.markProfileVehicleSet(user?.id || "");
+
       return res.status(201).json({
         message: "Update user vehicle model successfully",
-        data: updatedProfile,
+        data: {
+          profile: updatedProfile,
+          newAchievements: statsResult.newAchievements,
+        },
       });
     } catch (error: any) {
       return res.status(400).json({ message: error.message });
@@ -127,9 +125,15 @@ export default class ProfileController {
         stationId
       );
 
+      // Trigger stats + achievements
+      const statsResult = await this.userStatsService.markFavouriteChargeSaved(user?.id || "");
+
       return res.status(201).json({
         message: "Add favourite station successfully",
-        data: updatedProfile,
+        data: {
+          profile: updatedProfile,
+          newAchievements: statsResult.newAchievements,
+        },
       });
     } catch (error: any) {
       return res.status(400).json({ message: error.message });
@@ -197,6 +201,77 @@ export default class ProfileController {
       });
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
+    }
+  }
+
+  /**
+   * Function to get a users avatar
+   * 
+   * @param req Request object containing the user ID 
+   * @param res Response object used to send back the HTTP response
+   * @returns Returns the status code, a relevant message, and the data if the request was successful
+   */
+  async getUserAvatar(req: Request, res: Response): Promise<Response> {
+    try {
+      const userId = req.user.id;
+      const profile = await this.profileService.getUserProfile(userId);
+
+      if (!profile) {
+        return res.status(404).json({ message: "User profile not found" });
+      }
+
+      const avatarUrl = profile.avatarURL;
+      if (!avatarUrl) {
+        return res.status(404).json({ message: "User avatar not found" });
+      }
+
+      return res.status(200).json({
+        message: "Avatar retrieved successfully",
+        data: { avatarURL: avatarUrl }
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Server error" });
+    }
+  }
+
+  /**
+   * Function to update the profiles image/avatar
+   * 
+   * @param req Request object containing the user ID and avatar URL
+   * @param res Response object used to send back the HTTP response
+   * @returns Returns the status code, a relevant message, and the data if the request was successful
+   */
+  async updateAvatar(req: Request, res: Response): Promise<Response> {
+    try {
+      const userID = req.user.id;
+      const { avatarURL } = req.body;
+
+      if (!avatarURL) {
+        return res.status(400).json({ message: "avatarURL is required" });
+      }
+
+      // Update the profile picture
+      const updatedProfile = await this.profileService.updateAvatar(userID, avatarURL);
+
+      if (!updatedProfile) {
+        return res.status(404).json({ message: "User profile not found" });
+      }
+
+      // Trigger stats + achievements
+      const result = await this.userStatsService.markProfilePicSet(userID);
+
+      return res.status(200).json({
+        message: "Avatar updated successfully",
+        data: {
+          profile: updatedProfile,
+          stats: result.stats,
+          newAchievements: result.newAchievements
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Server error" });
     }
   }
 
