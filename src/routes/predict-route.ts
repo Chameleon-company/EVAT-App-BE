@@ -326,4 +326,16 @@ router.post("/vehicles/ice/efficiency", authGuard(["user", "admin"]), (req, res)
     predictController.getIceEfficiency(req, res);
 });
 
+router.post("/demand", authGuard(["user", "admin"]), (req, res) => {
+    predictController.getDemandForecast(req, res);
+});
+
+router.get("/demand/postcodes", authGuard(["user", "admin"]), (req, res) => {
+    predictController.getDemandPostcodes(req, res);
+});
+
+router.get("/demand/coords/:postcode", authGuard(["user", "admin"]), (req, res) => {
+    predictController.getDemandCoords(req, res);
+});
+
 export default router;
