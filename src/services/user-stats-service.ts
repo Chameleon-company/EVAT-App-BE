@@ -1,12 +1,13 @@
 import userStatsRepository from "../repositories/user-stats-repository";
-import { IUserStats } from "../models/user-stats-model";
+import achievementService from "../services/achievement-service";
+import { IUserStats, ICounters, IFlags } from "../models/user-stats-model";
 
 // This service handles all the achievement system items
 // It is the place to put calculations and derived values (like "1 year since joining")
 // Extend as needed
+// It is currently split into categories to manage service types
 
 export class UserStatsService {
-
   /**
    * Get current stats for a user
    * 
@@ -47,7 +48,11 @@ export class UserStatsService {
       metresTravelled?: number;
       chargingCostCents?: number;
     }
-  ): Promise<IUserStats | null> {
+  ): Promise<{
+    stats: IUserStats | null; 
+    newAchievements: any[]
+  }> {
+
     // create update data
     const updates: any = {
       totalChargeTimeSeconds: data.chargeTimeSeconds,
@@ -63,12 +68,28 @@ export class UserStatsService {
       updates.totalChargingCostsCents = data.chargingCostCents;
     }
 
+    // IMPORTANT
     // You can add derived calculations here (CO2, petrol savings, etc.)
     // Example:
     // updates.totalCO2KgAvoided = Math.round(data.whCharged * 0.0005); // rough factor
     // updates.totalPetrolSavingsCents = Math.round(data.whCharged * 0.015);
 
-    return userStatsRepository.incrementCounters(userId, updates);
+    // Update stats
+    const updatedStats = await userStatsRepository.incrementCounters(userId, updates);
+
+    // Check for new achievements
+    let newAchievements: any[] = [];
+    if (updatedStats) {
+      newAchievements = await achievementService.evaluateAndAwardAchievements(userId, [
+        "totalChargeTimeSeconds",
+        "totalWhCharged",
+        "totalChargingSessions",
+        "totalMetresTravelled",
+        "totalChargingCostsCents"
+      ]);
+    }
+
+    return { stats: updatedStats, newAchievements };
   }
 
   // ====================== LOGIN & STREAKS ======================
@@ -79,13 +100,27 @@ export class UserStatsService {
    * @param userId String: a specific users ID
    * @returns UserStats: Returns the specified users stats
    */
-  async recordLogin(userId: string): Promise<IUserStats | null> {
-    // TODO: You will need lastLoginDate logic (add it later to the model if needed)
-    // simple version - add 1 to both login days and consecutive days
-    return userStatsRepository.incrementCounters(userId, {
+  async recordLogin(
+    userId: string
+  ): Promise<{
+    stats: IUserStats | null; 
+    newAchievements: any[]
+  }> {
+    const updatedStats = await userStatsRepository.incrementCounters(userId, {
       totalLoginDays: 1,
       consecutiveLoginDays: 1,
     });
+
+    // Check for new achievements
+    let newAchievements: any[] = [];
+    if (updatedStats) {
+      newAchievements = await achievementService.evaluateAndAwardAchievements(userId, [
+        "totalLoginDays",
+        "consecutiveLoginDays"
+      ]);
+    }
+
+    return { stats: updatedStats, newAchievements };
   }
 
   // ====================== PROFILE & ONBOARDING ======================
@@ -96,16 +131,71 @@ export class UserStatsService {
    * @param userId String: a specific users ID
    * @returns UserStats: Returns the specified users stats
    */
-  async markProfilePicSet(userId: string): Promise<IUserStats | null> {
-    return userStatsRepository.setFlags(userId, { setProfilePic: true });
+  async markProfilePicSet(
+    userId: string
+  ): Promise<{
+    stats: IUserStats | null; 
+    newAchievements: any[]
+  }> {
+    // Get current stats to check the existing value
+    const currentStats = await userStatsRepository.findByUserId(userId);
+    // Early return if already set to true
+    if (currentStats?.flags?.setProfilePic === true) {
+      return { stats: currentStats, newAchievements: [] };
+    }
+    // Update the flag because it is currently false
+    const updatedStats = await userStatsRepository.setFlags(userId, { setProfilePic: true });
+    // Evaluate and Award the Achievement
+    let newAchievements: any[] = [];
+    if (updatedStats) {
+      newAchievements = await achievementService.evaluateAndAwardAchievements(userId, ["setProfilePic"]);
+    }
+    return { stats: updatedStats, newAchievements };
   }
 
-  async markProfileVehicleSet(userId: string): Promise<IUserStats | null> {
-    return userStatsRepository.setFlags(userId, { setProfileVehicle: true });
+  async markProfileVehicleSet(
+    userId: string
+  ): Promise<{
+    stats: IUserStats | null; 
+    newAchievements: any[]
+  }> {
+    // Get current stats to check the existing value
+    const currentStats = await userStatsRepository.findByUserId(userId);
+    // Early return if already set to true
+    if (currentStats?.flags?.setProfileVehicle === true) {
+      return { stats: currentStats, newAchievements: [] };
+    }
+    // Update the flag because it is currently false
+    const updatedStats = await userStatsRepository.setFlags(userId, { setProfileVehicle: true });
+    // Evaluate and Award the Achievement
+    let newAchievements: any[] = [];
+    if (updatedStats) {
+      newAchievements = await achievementService.evaluateAndAwardAchievements(userId, ["setProfileVehicle"]);
+    }
+    return { stats: updatedStats, newAchievements };
   }
 
-  async markFavouriteChargeSaved(userId: string): Promise<IUserStats | null> {
-    return userStatsRepository.setFlags(userId, { saveFavouriteCharge: true });
+  async markFavouriteChargeSaved(
+    userId: string
+  ): Promise<{
+    stats: IUserStats | null; 
+    newAchievements: any[]
+  }> {
+    // Get current stats to check the existing value
+    const currentStats = await userStatsRepository.findByUserId(userId);
+    // Early return if already set to true
+    if (currentStats?.flags?.saveFavouriteCharger === true) {
+      return { stats: currentStats, newAchievements: [] };
+    }
+    // Update the flag because it is currently false
+    const updatedStats = await userStatsRepository.setFlags(userId, { saveFavouriteCharger: true });
+    // Evaluate and Award the Achievement
+    let newAchievements: any[] = [];
+    if (updatedStats) {
+      newAchievements = await achievementService.evaluateAndAwardAchievements(userId, ["saveFavouriteCharger"]);
+    }
+
+    return { stats: updatedStats, newAchievements };
   }
 
   // ====================== REVIEWS & SOCIAL ======================
@@ -116,29 +206,75 @@ export class UserStatsService {
    * @param userId String: a specific users ID
    * @returns UserStats: Returns the specified users stats
    */
-  async recordReviewWritten(userId: string): Promise<IUserStats | null> {
-    return userStatsRepository.incrementCounters(userId, {
+  async recordReviewWritten(
+    userId: string
+  ): Promise<{
+    stats: IUserStats | null; 
+    newAchievements: any[]
+  }> {
+    const updatedStats = await userStatsRepository.incrementCounters(userId, {
       totalReviewsWritten: 1,
     });
+
+    // Check for new achievements
+    let newAchievements: any[] = [];
+    if (updatedStats) {
+      newAchievements = await achievementService.evaluateAndAwardAchievements(userId, ["totalReviewsWritten"]);
+    }
+
+    return { stats: updatedStats, newAchievements };
   }
 
-  async recordRatingGiven(userId: string): Promise<IUserStats | null> {
-    return userStatsRepository.incrementCounters(userId, {
+  async recordRatingGiven(
+    userId: string
+  ): Promise<{
+    stats: IUserStats | null; 
+    newAchievements: any[]
+  }> {
+    const updatedStats = await userStatsRepository.incrementCounters(userId, {
       totalRatingsGiven: 1,
     });
+
+    // Check for new achievements
+    let newAchievements: any[] = [];
+    if (updatedStats) {
+      newAchievements = await achievementService.evaluateAndAwardAchievements(userId, ["totalRatingsGiven"]);
+    }
+
+    return { stats: updatedStats, newAchievements };
   }
 
-  // TESTING HELPERS - resets stats
+  // TESTING HELPERS - direct access to user stats and resets stats
+  async incrementCounters(userId: string, updates: Partial<ICounters>) {
+    const updatedStats = await userStatsRepository.incrementCounters(userId, updates);
+    
+    if (updatedStats) {
+      await achievementService.evaluateAndAwardAchievements(userId, Object.keys(updates));
+    }
+    
+    return updatedStats;
+  }
+
+  async setFlags(userId: string, updates: Partial<IFlags>) {
+    const updatedStats = await userStatsRepository.setFlags(userId, updates);
+    
+    if (updatedStats) {
+      await achievementService.evaluateAndAwardAchievements(userId, Object.keys(updates));
+    }
+    
+    return updatedStats;
+  }
+
   async resetAllStats(userId: string): Promise<IUserStats | null> {
     return userStatsRepository.resetAll(userId);
   }
 
-  async resetCounter(userId: string, counterName: keyof IUserStats["counters"]) {
-    return userStatsRepository.resetCounter(userId, counterName);
+  async resetCounters(userId: string) {
+    return userStatsRepository.resetCounters(userId);
   }
 
-  async resetFlag(userId: string, flagName: keyof IUserStats["flags"]) {
-    return userStatsRepository.resetFlag(userId, flagName);
+  async resetFlags(userId: string) {
+    return userStatsRepository.resetFlags(userId);
   }
 }
 

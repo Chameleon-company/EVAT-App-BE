@@ -26,7 +26,7 @@ export interface IFlags {
   useSmartFilter: boolean;
   useChatBot: boolean;
   setProfileVehicle: boolean;
-  saveFavouriteCharge: boolean;
+  saveFavouriteCharger: boolean;
   postReview: boolean;
   giveRating: boolean;
   useTeslaNetwork: boolean;
@@ -84,7 +84,7 @@ const UserStatsSchema: Schema = new Schema<IUserStats>(
         useSmartFilter: { type: Boolean, default: false },
         useChatBot: { type: Boolean, default: false },
         setProfileVehicle: { type: Boolean, default: false },
-        saveFavouriteCharge: { type: Boolean, default: false },
+        saveFavouriteCharger: { type: Boolean, default: false },
         postReview: { type: Boolean, default: false },
         giveRating: { type: Boolean, default: false },
         useTeslaNetwork: { type: Boolean, default: false },

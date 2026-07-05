@@ -29,8 +29,7 @@ import PredictRoutes from "./src/routes/predict-route";
 import EnvImpactAnalysisRoutes from "./src/routes/env-impact-analysis-route";
 import VoiceRoutes from "./src/routes/voice-route";
 import userStatsRoutes from "./src/routes/user-stats-route";
-import personalisedEVInsightsRoutes from "./src/routes/personalised-ev-insights-routes";
-import weatherAwareRoutingRoutes from "./src/routes/weather-aware-routing-routes";
+import achievementRoutes from "./src/routes/achievement-route";
 
 dotenv.config();
 
@@ -123,8 +122,7 @@ app.use("/api/predict", PredictRoutes);
 app.use("/api/env-impact-analysis", EnvImpactAnalysisRoutes);
 app.use("/api/voice", VoiceRoutes);
 app.use("/api/user-stats", userStatsRoutes);
-app.use("/api/personalised-ev-insights", personalisedEVInsightsRoutes);
-app.use("/weather-aware-routing", weatherAwareRoutingRoutes);
+app.use("/api/achievements", achievementRoutes);
 
 
 // Serve React frontend

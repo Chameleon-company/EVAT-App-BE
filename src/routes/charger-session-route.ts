@@ -5,6 +5,7 @@ import { Request, Response } from 'express';
 
 import ChargerSessionController from '../controllers/charger-session-controller';
 import ChargerSessionService from '../services/charger-session-service';
+import userStatsService from "../services/user-stats-service";
 import ChargerSessionRepository from '../repositories/charger-session-repository';
 
 // Middleware
@@ -16,7 +17,7 @@ const router = express.Router();
 // Setup: controller -> service -> repository
 const chargerSessionRepository = new ChargerSessionRepository();
 const chargerSessionService = new ChargerSessionService(chargerSessionRepository);
-const chargerSessionController = new ChargerSessionController(chargerSessionService);
+const chargerSessionController = new ChargerSessionController(chargerSessionService, userStatsService);
 
 // Routes with Swagger documentations
 
